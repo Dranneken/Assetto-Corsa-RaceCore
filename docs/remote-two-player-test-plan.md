@@ -6,6 +6,8 @@ Verify that two Assetto Corsa players on separate home networks can join the sam
 
 The Assetto Corsa lobby carries the game traffic. The private network in this plan carries RaceCore telemetry and API traffic only.
 
+This plan tests the **current private cross-network setup**. Tailscale is an extra install for the RaceCore host and both testers in this test; it is not a requirement for everyone in the Kunos lobby. Public hosting without a player-side networking app is planned separately and is not available yet.
+
 ## Using a public Kunos lobby
 
 - Both players must find and join the same open server-list lobby at the same time. Coordinate the exact server name, track/layout, car restrictions, and session before starting.
@@ -21,9 +23,17 @@ The Assetto Corsa lobby carries the game traffic. The private network in this pl
 - The CSP client also defaults to `127.0.0.1:8000`. On both players' PCs, set its Host field to `<host-tailscale-ip>:8000`.
 - Session management and race-state REST endpoints require the temporary RaceCore admin username and password. The CSP WebSocket telemetry stream does not use that login, so keep the host on a private network for this test. Do not configure router port forwarding or expose port 8000 to the public internet. The joining player does not need the admin credential.
 
+### What each person needs for this test
+
+- **RaceCore host / Player A:** Windows RaceCore host, Assetto Corsa and CSP if also driving, the RaceCore Lua client if driving, and Tailscale.
+- **Joining player / Player B:** Assetto Corsa, CSP, the RaceCore Lua client, and Tailscale. Player B does not install the RaceCore host, Python, PostgreSQL, or receive the admin credential.
+- **Other Kunos lobby drivers:** No RaceCore or Tailscale setup is needed. They are not included in RaceCore state unless they also run a configured RaceCore client.
+
+Both testers need a Tailscale account for this private test. Device sharing lets Player B connect to the RaceCore host from a separate tailnet; it does not combine the players into one user. If needing an extra account/app is unacceptable for public players, defer the test until a public RaceCore endpoint is deployed. Do not work around this by making the unauthenticated telemetry WebSocket publicly reachable.
+
 ## Recommended network setup
 
-Use Tailscale as a private network between the two PCs. It is a separate installation, not included with RaceCore, and is not installed on the current host PC yet. Install it on the host and both players' Windows PCs and connect them. Its device traffic is encrypted with WireGuard, including when it has to relay traffic. For a player using a different Tailscale account, share only the RaceCore host machine with that player; the telemetry connection starts from their PC toward the shared host. Check the tailnet access policy before testing because a default policy may allow all devices in that tailnet to reach each other. See [official Windows install instructions](https://tailscale.com/docs/install/windows).
+For this private test, use Tailscale as a private network between the RaceCore host and both players. It is a separate installation, not included with RaceCore, and is not installed on the current host PC yet. Install it on the host and both players' Windows PCs and connect them. For a player using a different Tailscale account, share only the RaceCore host machine with that player; the telemetry connection starts from their PC toward the shared host. Check the tailnet access policy before testing because it may allow more access than intended. See [official Windows install instructions](https://tailscale.com/docs/install/windows).
 
 1. Pick one PC to run RaceCore. This can also be Player A's Assetto Corsa PC.
 2. Install and connect Tailscale on the RaceCore host and both players' PCs. Record the host's Tailscale IPv4 address (`100.x.y.z`).
@@ -55,6 +65,7 @@ Use Tailscale as a private network between the two PCs. It is a separate install
 
 - [ ] Record date, RaceCore version, CSP version, Assetto Corsa version, track, cars, and both players' regions.
 - [ ] Record which PC hosts RaceCore and whether PostgreSQL persistence is enabled.
+- [ ] Confirm both testers understand Tailscale is an extra install for this private test only; record any setup or account friction.
 - [ ] Confirm both players can join the same open Kunos server-list lobby and session. Record its name, track/layout, region if shown, and car restrictions.
 - [ ] Confirm both PCs show as connected in Tailscale and Player B can open the host's `/health` endpoint.
 - [ ] Confirm both session entries have unique car IDs and driver IDs.
@@ -101,7 +112,7 @@ Use Tailscale as a private network between the two PCs. It is a separate install
 - Each CSP client recovers after a temporary network or app disconnect without restarting the host.
 - The session and race-state endpoints remain responsive throughout the 30-minute run.
 
-Do not treat one successful short run as proof that public internet hosting is ready. This test validates a private two-player path; authentication and production remote hosting still need separate work.
+Do not treat one successful short run as proof that public internet hosting is ready. This test validates telemetry over a private two-player path; players still need Tailscale for this current remote setup. The planned public VPS setup should let players connect to an authenticated HTTPS/WSS endpoint without Tailscale. Public deployment, telemetry-client authentication, and load testing for the 50-car goal remain separate work.
 
 ## Record sheet
 
@@ -110,6 +121,7 @@ Do not treat one successful short run as proof that public internet hosting is r
 | Region / approximate distance |  |  |
 | Network type (wired, Wi-Fi, mobile) |  |  |
 | Tailscale connected |  |  |
+| Tailscale setup friction / direct or relayed path |  |  |
 | Car ID / driver ID |  |  |
 | Average / highest observed round-trip latency |  |  |
 | Packet gaps or stale events |  |  |
