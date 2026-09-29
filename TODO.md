@@ -38,6 +38,7 @@ The original detailed plan is preserved in [`ToDoList.txt`](ToDoList.txt). Work 
 - [x] In-memory live telemetry and rolling evidence buffer
 - [x] Connect the CSP Lua client to the RaceCore host and add connection-loss handling
 - [ ] Driver-specific live data API/WebSocket
+- [ ] Validate two-player telemetry across separate home networks; see [`docs/remote-two-player-test-plan.md`](docs/remote-two-player-test-plan.md)
 
 ## Milestone 6: Host distribution
 

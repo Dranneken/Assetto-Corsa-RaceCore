@@ -126,6 +126,7 @@ backend/       FastAPI host, domain logic, migrations, and tests
 client/        CSP Lua client source
 control/       React + TypeScript + Vite dashboard
 docs/          Architecture and development conventions
+               Remote test plan: docs/remote-two-player-test-plan.md
 tools/         Windows setup, packaging, install, and lifecycle scripts
 TODO.md        Current project roadmap
 ToDoList.txt   Original detailed checklist
