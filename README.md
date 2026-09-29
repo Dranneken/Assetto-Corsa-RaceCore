@@ -6,6 +6,8 @@ The host owns race sessions and authoritative race state. The in-game app sends 
 
 > **Development status:** The session and race-state APIs, telemetry ingestion, in-memory live state, persistence layer, temporary admin HTTP Basic authentication, and Windows host packaging are implemented. The Control dashboard is currently a scaffold. Incident review, reports, full user accounts and roles, and first-run configuration are still on the roadmap. This is a pre-release project; it is not v1.0.
 
+> **Public access is planned, not available yet:** The intended public setup is a RaceCore backend on a public server, so players can connect without Tailscale or another networking app. The current remote test uses a private network. The telemetry WebSocket does not yet authenticate clients, so do not expose the current host directly to the public internet. RaceCore has not been load-tested for 50 cars.
+
 ## Joining a race as a client
 
 If someone else is hosting RaceCore, you only need the in-game client. You do **not** need to install or start the RaceCore host, Python, PostgreSQL, or this repository.
@@ -13,7 +15,7 @@ If someone else is hosting RaceCore, you only need the in-game client. You do **
 1. Download both client files: [AC_RaceCore.lua](https://raw.githubusercontent.com/Dranneken/Assetto-Corsa-RaceCore/main/client/csp_lua/AC_RaceCore.lua) and [manifest.ini](https://raw.githubusercontent.com/Dranneken/Assetto-Corsa-RaceCore/main/client/csp_lua/manifest.ini). [Browse the client folder](https://github.com/Dranneken/Assetto-Corsa-RaceCore/tree/main/client/csp_lua).
 2. Create `assettocorsa/apps/lua/AC_RaceCore` in your Assetto Corsa installation and put both downloaded files in that folder.
 3. Enable **RaceCore Client** in the CSP Apps settings, then start Assetto Corsa and join the same open lobby from the Kunos server list as the host. Coordinate its server name, track/layout, and car restrictions first.
-4. If the RaceCore host is on another network, install and connect Tailscale, then accept the host's device-sharing invitation. In the in-game RaceCore Client window, set Host to the Tailscale address and port the host gives you, such as `100.x.y.z:8000`.
+4. For the current remote test, if the RaceCore host is on another network, install and connect Tailscale, then accept the host's device-sharing invitation. In the in-game RaceCore Client window, set Host to the Tailscale address and port the host gives you, such as `100.x.y.z:8000`. Tailscale is a temporary private-test requirement; players will not need it once public hosting is implemented.
 5. Enter the session ID, car ID, and driver ID supplied by the RaceCore host, then connect. The IDs must match your configured session entry.
 
 You need the same Assetto Corsa track, car, and other content required by the multiplayer race. The [remote two-player test plan](docs/remote-two-player-test-plan.md) has the full connection checklist.
@@ -23,6 +25,8 @@ You need the same Assetto Corsa track, car, and other content required by the mu
 The host is the one PC that runs the RaceCore API for the session. The Assetto Corsa multiplayer server is separate; RaceCore does not host the game server. The host can also join the race as a player by installing the client above on that PC.
 
 > **Remote-test prerequisite:** Tailscale is not included with RaceCore and is not installed on the current host PC yet. Install it on the host and each remote player's PC before testing across separate home networks. [Tailscale for Windows](https://tailscale.com/docs/install/windows).
+
+For the planned public setup, RaceCore would run on a public server and clients would connect to its secure endpoint. Players would not install Tailscale. Public deployment and secure telemetry-client authentication are not implemented yet.
 
 1. Install and start the [Windows RaceCore host](#package-the-windows-host). PostgreSQL is optional for a two-player test; without it, RaceCore uses in-memory storage. The Assetto Corsa multiplayer lobby is separate and may be an open server selected from the Kunos server list.
 2. For players on different networks, install Tailscale on the host PC and share access to **only that host PC** with the joining player. Set `RACECORE_HOST` in `%LOCALAPPDATA%\RaceCore\.env` to the host PC's Tailscale IP address, then restart RaceCore. Its default `127.0.0.1` setting accepts local connections only.
@@ -51,15 +55,15 @@ Follow the [remote two-player test plan](docs/remote-two-player-test-plan.md) fo
 - Custom Shaders Patch (CSP) installed, with the RaceCore Lua client enabled.
 - The two client files linked above, copied into `assettocorsa/apps/lua/AC_RaceCore`.
 - The same track, car, and other content required by the public lobby.
-- Tailscale installed and connected if the RaceCore host is on a different network. It is a separate download, not part of the RaceCore app. The host must share access to its Tailscale device with you.
-- The host's Tailscale address, session ID, and your configured car ID and driver ID.
+- For the current remote test only: Tailscale installed and connected if the RaceCore host is on a different network. It is a separate download, not part of the RaceCore app. The host must share access to its Tailscale device with you.
+- The host's private test address, session ID, and your configured car ID and driver ID. A public RaceCore server address is planned, but is not available yet.
 
 Joining players do not need the RaceCore host, Python, PostgreSQL, Node.js, or the admin password.
 
 ### Hosting RaceCore for remote players
 
 - A Windows PC with the packaged RaceCore host installed. Version `0.1.1` is the current test build.
-- Tailscale installed and connected on the host PC and joining players' PCs. For this test it is not installed on the current host PC yet; install it separately using the [official Windows instructions](https://tailscale.com/docs/install/windows).
+- Tailscale installed and connected on the host PC and joining players' PCs for the current cross-network test. It is not installed on the current host PC yet; install it separately using the [official Windows instructions](https://tailscale.com/docs/install/windows). Tailscale is not the planned requirement for public players.
 - The host's temporary admin credential, which the installer prints and stores in `%LOCALAPPDATA%\RaceCore\.env`.
 - Windows Firewall access to TCP port `8000` over Tailscale. Do not expose it through router port forwarding; the CSP telemetry stream has no admin login.
 - PostgreSQL 17 only if durable database storage is wanted. It is optional for the two-player test.
@@ -149,6 +153,9 @@ This is the current high-level roadmap. The detailed task checklist is in [`TODO
 ### Planned
 
 - Telemetry interpolation and client-side update-rate tuning.
+- Public deployment of the RaceCore backend on a VPS, with a stable HTTPS/WSS endpoint and authenticated telemetry clients. Players should not need Tailscale; this is not implemented yet.
+- Validate client and dashboard update targets: RC Client ~2–5 Hz, RC Control ~5–10 Hz, RC Broadcast ~2–5 Hz, and RC Steward mostly event-driven.
+- Measure telemetry capacity with increasing client counts, up to the 50-car goal; no 50-car capacity claim is established yet.
 - Incident detection and steward review, with detection kept separate from penalty decisions.
 - Evidence viewing and export, broadcast tools, and post-race results.
 - Race and driver reports, full user accounts and role-based access control, monitoring, deployment, backup, and recovery.

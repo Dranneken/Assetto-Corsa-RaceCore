@@ -45,6 +45,9 @@ The original detailed plan is preserved in [`ToDoList.txt`](ToDoList.txt). Work 
 - [x] Decide how PostgreSQL is installed and started for a local RaceCore host
 - [x] Package the FastAPI host as a separate user-level Windows app with start, stop, logs, and upgrade handling
 - [ ] Add a first-run configuration flow for the database and Assetto Corsa telemetry adapter
+- [ ] Prepare a public VPS deployment with a stable HTTPS/WSS endpoint; player connections should not require Tailscale
+- [ ] Authenticate and authorize CSP telemetry WebSocket clients before any public exposure
+- [ ] Load-test telemetry with increasing client counts through the 50-car target and document measured limits
 - [x] Keep host installation and updates independent from the CSP Lua client deployment
 
 ## Milestone 4: Race operations
