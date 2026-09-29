@@ -1,0 +1,625 @@
+# Assetto Corsa RaceCore — Master TODO
+
+Project folder: `AC_RaceCore`
+Project name: Assetto Corsa RaceCore
+Short name: RaceCore
+
+## Architecture decisions
+
+* [x] Run RaceCore as a separate local backend/service with browser interfaces and PostgreSQL
+* [x] Use a lightweight CSP Lua app as the in-game companion, not the source of authoritative race state
+* [x] Keep the source repository outside `assettocorsa/apps/lua`; deploy only the CSP client there
+* [x] Package and install the RaceCore host independently as a user-level Windows app
+
+---
+
+## 0. Project Foundation
+
+* [x] Create Git repository: `AC_RaceCore`
+* [x] Create project folder structure
+* [x] Create `README.md`
+* [x] Create `TODO.md`
+* [x] Create architecture documentation
+* [x] Create `.gitignore`
+* [x] Define coding conventions
+* [x] Define environment/configuration system
+* [x] Choose backend framework — FastAPI
+* [x] Choose frontend framework — React + TypeScript + Vite
+* [x] Set up Python virtual environment
+* [x] Set up dependency management
+* [x] Set up PostgreSQL (local user-level PostgreSQL 17 setup scripts)
+* [x] Define initial database schema
+* [x] Set up database migrations
+* [x] Set up basic testing
+* [x] Set up CI
+
+---
+
+## 1. RaceCore Backend
+
+### Race Session
+
+* [x] Create race session
+* [x] Load session configuration
+* [x] Store session configuration snapshot
+* [x] Session states:
+
+  * [x] Pre-race
+  * [x] Formation
+  * [x] Green
+  * [x] Yellow/Caution
+  * [x] Safety Car
+  * [x] Red Flag
+  * [x] Finished
+  * [x] Post-race
+* [x] Start session
+* [x] Pause session
+* [x] Resume session
+* [x] Restart session
+* [x] End session
+* [x] Reset session
+* [x] Session audit log
+
+### Race State
+
+* [x] Maintain live state for every car
+* [x] Current lap
+* [x] Race position
+* [x] Class position
+* [x] Sector
+* [x] Sector times
+* [x] Lap times
+* [x] Gap to car ahead
+* [x] Gap to leader
+* [x] Pit status
+* [x] Driver status
+* [x] Connection status
+* [x] DNF/retirement status
+* [x] Damage state
+* [x] Authoritative race order
+
+---
+
+## 2. RC Telemetry
+
+### Telemetry Collector
+
+* [x] Connect to Assetto Corsa telemetry
+* [x] Receive telemetry packets
+* [x] Validate packets
+* [x] Timestamp packets
+* [x] Detect dropped packets
+* [x] Detect stale telemetry
+* [x] Monitor telemetry connection health
+* [x] Identify connected drivers
+* [x] Handle driver join/leave
+
+### Driver Telemetry
+
+* [x] Position
+* [x] Speed
+* [x] RPM
+* [x] Gear
+* [x] Throttle
+* [x] Brake
+* [x] Steering
+* [x] Fuel
+* [x] Tyre data
+* [x] Lap
+* [x] Sector
+* [x] Race position
+* [x] Pit status
+* [x] Damage
+* [x] Car state
+* [x] Track position
+
+### Live Processing
+
+* [x] Latest state stored in RAM
+* [x] Rolling telemetry buffer
+* [x] Per-driver telemetry history
+* [ ] Telemetry interpolation
+* [x] Stale-data detection
+* [x] Driver latency monitoring
+* [x] Connection quality monitoring
+
+### Target Update Rates
+
+* [x] AC telemetry: ~20–60 Hz
+* [x] RaceCore processing: ~20–60 Hz
+* [ ] RC Client: ~2–5 Hz
+* [ ] RC Control: ~5–10 Hz
+* [ ] RC Broadcast: ~2–5 Hz
+* [ ] RC Steward: mostly event-driven
+
+---
+
+## 3. RC Incidents
+
+### Incident Detection
+
+* [ ] Collision detection
+* [ ] Multi-car collision detection
+* [ ] Spin detection
+* [ ] Off-track detection
+* [ ] Track-limit detection
+* [ ] Unsafe rejoin detection
+* [ ] Wrong-way detection
+* [ ] Stationary-car detection
+* [ ] Pit-lane violation detection
+* [ ] Pit-speed violation detection
+* [ ] Jump-start detection
+* [ ] Formation-lap violation detection
+* [ ] Blue-flag events
+* [ ] Damage-change events
+
+### Incident Pipeline
+
+DETECTED → CLASSIFIED → QUEUED → STEWARD REVIEW → DECISION → FINALIZED
+
+* [ ] Incident ID
+* [ ] Timestamp
+* [ ] Track location
+* [ ] Lap
+* [ ] Participants
+* [ ] Incident type
+* [ ] Severity
+* [ ] Evidence reference
+* [ ] Status
+* [ ] Steward notes
+* [ ] Decision
+* [ ] Decision timestamp
+* [ ] Steward identity
+* [ ] Duplicate detection
+* [ ] Incident grouping
+
+### Important Architecture Rule
+
+* [ ] Detection must be separate from penalty decisions
+* [ ] Do not automatically penalize every detected incident
+* [ ] Allow stewards to make the final decision
+
+---
+
+## 4. Evidence System
+
+### Rolling Buffer
+
+* [ ] Maintain approximately 30 seconds before incident
+* [ ] Maintain approximately 30 seconds after incident
+* [ ] Store position
+* [ ] Store speed
+* [ ] Store RPM
+* [ ] Store gear
+* [ ] Store throttle
+* [ ] Store brake
+* [ ] Store steering
+* [ ] Store track position
+* [ ] Store relative position
+* [ ] Store damage
+* [ ] Store race position
+
+### Evidence Viewer
+
+* [ ] Incident timeline
+* [ ] Track map
+* [ ] Car positions
+* [ ] Speed graph
+* [ ] Brake graph
+* [ ] Throttle graph
+* [ ] Steering graph
+* [ ] Relative distance
+* [ ] Sector/location information
+* [ ] Before/after incident view
+* [ ] Incident replay
+* [ ] Evidence export
+
+---
+
+## 5. RC Control
+
+Browser-based Race Director interface.
+
+### Race Director Dashboard
+
+* [ ] Live leaderboard
+* [ ] Track map
+* [ ] Driver status
+* [ ] Connection status
+* [ ] Race clock
+* [ ] Lap counter
+* [ ] Sector status
+* [ ] Gaps
+* [ ] Pit status
+* [ ] Incident alerts
+
+### Race Commands
+
+* [ ] Start
+* [ ] Pause
+* [ ] Resume
+* [ ] Restart
+* [ ] End race
+* [ ] Red flag
+* [ ] Yellow flag
+* [ ] Full-course caution
+* [ ] Safety car
+* [ ] Race restart
+* [ ] Race termination
+
+### Race Command Requirements
+
+* [ ] Every command goes through RaceCore
+* [ ] Every command updates authoritative race state
+* [ ] Every command generates an event
+* [ ] Every command is audit logged
+
+---
+
+## 6. RC Steward
+
+### Steward Dashboard
+
+* [ ] Incident queue
+* [ ] Incident filters
+* [ ] Severity filter
+* [ ] Driver filter
+* [ ] Status filter
+* [ ] Incident timeline
+* [ ] Evidence viewer
+* [ ] Telemetry comparison
+* [ ] Track map
+* [ ] Driver-to-driver comparison
+
+### Steward Actions
+
+* [ ] No further action
+* [ ] Warning
+* [ ] Penalty
+* [ ] Investigate
+* [ ] Refer
+* [ ] Withdraw
+* [ ] Mark duplicate
+* [ ] Add notes
+* [ ] Finalize decision
+
+### Multi-Steward
+
+* [ ] Steward accounts
+* [ ] Permissions
+* [ ] Incident assignment
+* [ ] Review ownership
+* [ ] Review history
+* [ ] Audit trail
+
+---
+
+## 7. RC Client
+
+Lightweight Assetto Corsa-side component.
+
+### Driver Information
+
+* [ ] Position
+* [ ] Lap
+* [ ] Gap
+* [ ] Session state
+* [ ] Flags
+* [ ] Penalties
+* [ ] Incident notifications
+* [ ] Race-control messages
+* [ ] Pit information
+
+### Requirements
+
+* [ ] Lightweight
+* [ ] Minimal FPS impact
+* [ ] Minimal CSP resource usage
+* [ ] ~2–5 updates/sec
+* [ ] Automatic RaceCore connection
+* [ ] Connection-loss handling
+
+---
+
+## 8. RC Broadcast
+
+Browser-based broadcast control.
+
+### Live Information
+
+* [ ] Leaderboard
+* [ ] Track map
+* [ ] Gaps
+* [ ] Sector times
+* [ ] Fastest laps
+* [ ] Position changes
+* [ ] Pit stops
+* [ ] Incidents
+* [ ] Battles
+* [ ] Driver information
+
+### Broadcast Controls
+
+* [ ] Driver selection
+* [ ] Battle selection
+* [ ] Incident selection
+* [ ] Camera target
+* [ ] Camera priority
+* [ ] Event timeline
+* [ ] Highlight events
+
+### Future
+
+* [ ] CMRT-style integration
+* [ ] Automated camera targeting
+* [ ] Battle detection
+* [ ] Interesting-event detection
+* [ ] Automatic camera switching
+
+---
+
+## 9. RC Analytics
+
+Post-race analysis.
+
+### Incident Analytics
+
+* [ ] Reconstruct collisions
+* [ ] Detect missed contacts
+* [ ] Collision chains
+* [ ] Secondary contacts
+* [ ] Spin analysis
+* [ ] Braking anomaly analysis
+* [ ] Unsafe-rejoin analysis
+* [ ] Incident clustering
+
+### Track Limits
+
+* [ ] Four-wheel excursions
+* [ ] Invalid laps
+* [ ] Repeated violations
+* [ ] Potential lap-time gains
+* [ ] Corner-by-corner analysis
+
+### Overtakes
+
+* [ ] Position changes
+* [ ] On-track overtakes
+* [ ] Pit-cycle position changes
+* [ ] Overtake detection
+* [ ] Overtake reversals
+* [ ] Overtake location
+
+### Battles
+
+* [ ] Close gaps
+* [ ] Sustained battles
+* [ ] Repeated attacks
+* [ ] Position changes
+* [ ] Battle duration
+* [ ] Closest battles
+* [ ] Longest battles
+
+### Pit Analysis
+
+* [ ] Pit entry
+* [ ] Pit exit
+* [ ] Pit duration
+* [ ] Fuel added
+* [ ] Tyres changed
+* [ ] Driver changes
+* [ ] Stint length
+* [ ] Pit violations
+
+---
+
+## 10. Race Results
+
+* [ ] Overall classification
+* [ ] Class classification
+* [x] Laps completed
+* [ ] Race time
+* [ ] Best lap
+* [ ] Average lap
+* [ ] Fastest sectors
+* [ ] Pit stops
+* [ ] Stints
+* [x] Positions gained/lost
+* [ ] Overtakes
+* [ ] Incidents
+* [ ] Track limits
+* [ ] DNS
+* [ ] DNF
+* [ ] Retirement
+
+---
+
+## 11. Driver Reports
+
+### Driver Report
+
+* [ ] Finish position
+* [ ] Class position
+* [ ] Laps
+* [ ] Race time
+* [ ] Best lap
+* [ ] Average lap
+* [ ] Fastest sectors
+* [ ] Pit stops
+* [ ] Stints
+* [ ] Overtakes
+* [ ] Positions gained/lost
+* [ ] Incidents
+* [ ] Track limits
+* [ ] Steward decisions
+
+### Other Reports
+
+* [ ] Team reports
+* [ ] Class reports
+* [ ] Full race report
+* [ ] Championship reports
+
+---
+
+## 12. PostgreSQL
+
+### Initial Tables
+
+* [x] `drivers`
+* [x] `sessions`
+* [x] `session_entries`
+* [x] `results`
+* [x] `laps`
+* [x] `incidents`
+* [x] `incident_participants`
+* [x] `penalties`
+* [x] `steward_reviews`
+* [x] `audit_logs`
+
+### Later Tables
+
+* [ ] `teams`
+* [ ] `championships`
+* [ ] `championship_entries`
+* [ ] `events`
+* [ ] `race_reports`
+* [ ] `telemetry_metadata`
+
+### Database Rule
+
+* [x] Persist durable race data in PostgreSQL
+* [ ] Do not create a raw high-frequency `telemetry_60hz` table
+* [ ] Keep live telemetry in RAM
+* [ ] Persist only data that needs long-term storage
+* [ ] Store large evidence/telemetry files outside PostgreSQL
+
+---
+
+## 13. Data Storage
+
+### RAM
+
+* [ ] Latest telemetry
+* [ ] Live race state
+* [ ] Active incidents
+* [ ] Live leaderboard
+* [x] Rolling telemetry buffer
+
+### PostgreSQL
+
+* [ ] Sessions
+* [ ] Drivers
+* [ ] Entries
+* [ ] Results
+* [x] Laps
+* [ ] Incidents
+* [ ] Penalties
+* [ ] Steward decisions
+* [ ] Audit logs
+
+### Evidence Storage
+
+* [ ] Extract incident evidence
+* [ ] Compress telemetry
+* [ ] Store evidence files
+* [ ] Store evidence file references in PostgreSQL
+* [ ] Later support NAS
+* [ ] Later support S3-compatible storage
+* [ ] Later support MinIO
+
+---
+
+## 14. RC API
+
+### REST API
+
+* [ ] Session API
+* [ ] Driver API
+* [ ] Race-state API
+* [ ] Incident API
+* [ ] Steward API
+* [ ] Results API
+* [ ] Analytics API
+* [ ] Authentication API
+
+### WebSocket API
+
+* [ ] Live race state
+* [ ] Incident events
+* [ ] Race-control commands
+* [ ] Steward updates
+* [ ] Broadcast events
+* [ ] Driver notifications
+
+### Role-Specific Subscriptions
+
+* [ ] RC Client: driver-specific data, ~2–5 Hz
+* [ ] RC Control: full race state, ~5–10 Hz
+* [ ] RC Steward: race state + incidents + evidence
+* [ ] RC Broadcast: race state + broadcast events, ~2–5 Hz
+
+---
+
+## 15. Authentication & Permissions
+
+* [ ] User authentication
+* [ ] Race Director role
+* [ ] Steward role
+* [ ] Broadcaster role
+* [ ] Driver role
+* [ ] Admin role
+* [ ] RBAC
+* [ ] Session access control
+* [ ] Audit logging
+* [ ] Session-specific permissions
+
+---
+
+## 16. Monitoring
+
+### RaceCore Health
+
+* [ ] Backend health
+* [ ] AC server connection
+* [ ] Telemetry health
+* [ ] PostgreSQL health
+* [ ] Client connections
+* [ ] Broadcast connections
+* [ ] CPU usage
+* [ ] RAM usage
+* [ ] Event processing latency
+* [ ] Dropped telemetry
+* [ ] Error logging
+
+---
+
+## 17. Docker — Later
+
+Initial development should use local PostgreSQL.
+
+When the application works:
+
+* [ ] Create `Dockerfile`
+* [ ] Create `docker-compose.yml`
+* [ ] RaceCore container
+* [ ] PostgreSQL container
+* [ ] PostgreSQL persistent volume
+* [ ] Environment variables
+* [ ] Database migrations
+* [ ] Health checks
+* [ ] Production configuration
+* [ ] Database backup
+* [ ] Database restore
+* [ ] Upgrade procedure
+
+### Eventually
+
+* [ ] RaceCore Backend
+* [ ] PostgreSQL
+* [ ] Redis
+* [ ] Analytics Worker
+
+---
+
+## 18. Redis —
