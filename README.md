@@ -22,6 +22,8 @@ You need the same Assetto Corsa track, car, and other content required by the mu
 
 The host is the one PC that runs the RaceCore API for the session. The Assetto Corsa multiplayer server is separate; RaceCore does not host the game server. The host can also join the race as a player by installing the client above on that PC.
 
+> **Remote-test prerequisite:** Tailscale is not included with RaceCore and is not installed on the current host PC yet. Install it on the host and each remote player's PC before testing across separate home networks. [Tailscale for Windows](https://tailscale.com/docs/install/windows).
+
 1. Install and start the [Windows RaceCore host](#package-the-windows-host). PostgreSQL is optional for a two-player test; without it, RaceCore uses in-memory storage. The Assetto Corsa multiplayer lobby is separate and may be an open server selected from the Kunos server list.
 2. For players on different networks, install Tailscale on the host PC and share access to **only that host PC** with the joining player. Set `RACECORE_HOST` in `%LOCALAPPDATA%\RaceCore\.env` to the host PC's Tailscale IP address, then restart RaceCore. Its default `127.0.0.1` setting accepts local connections only.
 3. Save the temporary admin username and password printed during host installation. They are stored in `%LOCALAPPDATA%\RaceCore\.env` and are for the RaceCore operator; do not send them to joining players.
@@ -43,11 +45,29 @@ Follow the [remote two-player test plan](docs/remote-two-player-test-plan.md) fo
 
 ## Requirements
 
-- Windows for the packaged host and CSP client deployment scripts.
-- Python 3.11 or newer for development and source runs.
-- Assetto Corsa with Custom Shaders Patch for in-game telemetry.
-- PostgreSQL 17 only if durable database storage is needed; the backend can run with an in-memory store.
-- Node.js is needed only to develop the Control UI.
+### Joining as a player
+
+- Assetto Corsa installed and able to join the selected Kunos server-list lobby.
+- Custom Shaders Patch (CSP) installed, with the RaceCore Lua client enabled.
+- The two client files linked above, copied into `assettocorsa/apps/lua/AC_RaceCore`.
+- The same track, car, and other content required by the public lobby.
+- Tailscale installed and connected if the RaceCore host is on a different network. It is a separate download, not part of the RaceCore app. The host must share access to its Tailscale device with you.
+- The host's Tailscale address, session ID, and your configured car ID and driver ID.
+
+Joining players do not need the RaceCore host, Python, PostgreSQL, Node.js, or the admin password.
+
+### Hosting RaceCore for remote players
+
+- A Windows PC with the packaged RaceCore host installed. Version `0.1.1` is the current test build.
+- Tailscale installed and connected on the host PC and joining players' PCs. For this test it is not installed on the current host PC yet; install it separately using the [official Windows instructions](https://tailscale.com/docs/install/windows).
+- The host's temporary admin credential, which the installer prints and stores in `%LOCALAPPDATA%\RaceCore\.env`.
+- Windows Firewall access to TCP port `8000` over Tailscale. Do not expose it through router port forwarding; the CSP telemetry stream has no admin login.
+- PostgreSQL 17 only if durable database storage is wanted. It is optional for the two-player test.
+
+### Development only
+
+- Python 3.11 or newer to run and package the backend from source.
+- Node.js only to develop the Control UI.
 
 ## Run from source
 
@@ -93,7 +113,7 @@ Pop-Location
 powershell.exe -ExecutionPolicy Bypass -File .\tools\package_host.ps1
 ```
 
-The package version is defined in `backend/pyproject.toml`. The generated ZIP in `dist/` contains a versioned executable, for example `RaceCore-0.1.0.exe`, plus its runtime files. Extract it and run `install_host.ps1` to install under `%LOCALAPPDATA%\Programs\RaceCore`; user configuration and logs are kept under `%LOCALAPPDATA%\RaceCore`. The host is installed independently of the CSP client and is not a Windows service.
+The package version is defined in `backend/pyproject.toml`. The generated ZIP in `dist/` contains a versioned executable, for example `RaceCore-0.1.1.exe`, plus its runtime files. Extract it and run `install_host.ps1` to install under `%LOCALAPPDATA%\Programs\RaceCore`; user configuration and logs are kept under `%LOCALAPPDATA%\RaceCore`. The host is installed independently of the CSP client and is not a Windows service.
 
 The package includes scripts to start and stop the host, view logs, and upgrade to another version. Upgrades preserve configuration and logs and retain the prior version for rollback. When PostgreSQL is configured, start it before starting RaceCore.
 

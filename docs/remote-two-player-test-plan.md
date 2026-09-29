@@ -23,7 +23,7 @@ The Assetto Corsa lobby carries the game traffic. The private network in this pl
 
 ## Recommended network setup
 
-Use Tailscale as a private network between the two PCs. Its device traffic is encrypted with WireGuard, including when it has to relay traffic. Install Tailscale on both Windows PCs and connect them. For a player using a different Tailscale account, share only the RaceCore host machine with that player; the telemetry connection starts from their PC toward the shared host. Check the tailnet access policy before testing because a default policy may allow all devices in that tailnet to reach each other.
+Use Tailscale as a private network between the two PCs. It is a separate installation, not included with RaceCore, and is not installed on the current host PC yet. Install it on the host and both players' Windows PCs and connect them. Its device traffic is encrypted with WireGuard, including when it has to relay traffic. For a player using a different Tailscale account, share only the RaceCore host machine with that player; the telemetry connection starts from their PC toward the shared host. Check the tailnet access policy before testing because a default policy may allow all devices in that tailnet to reach each other. See [official Windows install instructions](https://tailscale.com/docs/install/windows).
 
 1. Pick one PC to run RaceCore. This can also be Player A's Assetto Corsa PC.
 2. Install and connect Tailscale on the RaceCore host and both players' PCs. Record the host's Tailscale IPv4 address (`100.x.y.z`).
