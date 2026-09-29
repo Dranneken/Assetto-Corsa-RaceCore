@@ -6,6 +6,30 @@ The host owns race sessions and authoritative race state. The in-game app sends 
 
 > **Development status:** The session and race-state APIs, telemetry ingestion, in-memory live state, persistence layer, and Windows host packaging are implemented. The Control dashboard is currently a scaffold. Incident review, reports, authentication, and first-run configuration are still on the roadmap. This is a pre-release project; it is not v1.0.
 
+## Joining a race as a client
+
+If someone else is hosting RaceCore, you only need the in-game client. You do **not** need to install or start the RaceCore host, Python, PostgreSQL, or this repository.
+
+1. Download both client files: [AC_RaceCore.lua](https://raw.githubusercontent.com/Dranneken/Assetto-Corsa-RaceCore/main/client/csp_lua/AC_RaceCore.lua) and [manifest.ini](https://raw.githubusercontent.com/Dranneken/Assetto-Corsa-RaceCore/main/client/csp_lua/manifest.ini). [Browse the client folder](https://github.com/Dranneken/Assetto-Corsa-RaceCore/tree/main/client/csp_lua).
+2. Create `assettocorsa/apps/lua/AC_RaceCore` in your Assetto Corsa installation and put both downloaded files in that folder.
+3. Enable **RaceCore Client** in the CSP Apps settings, then start Assetto Corsa and join the race using the host's normal multiplayer server details.
+4. If the RaceCore host is on another network, install and connect Tailscale, then accept the host's device-sharing invitation. In the in-game RaceCore Client window, set Host to the Tailscale address and port the host gives you, such as `100.x.y.z:8000`.
+5. Enter the session ID, car ID, and driver ID supplied by the RaceCore host, then connect. The IDs must match your configured session entry.
+
+You need the same Assetto Corsa track, car, and other content required by the multiplayer race. The [remote two-player test plan](docs/remote-two-player-test-plan.md) has the full connection checklist.
+
+## Hosting with RaceCore
+
+The host is the one PC that runs the RaceCore API for the session. The Assetto Corsa multiplayer server is separate; RaceCore does not host the game server. The host can also join the race as a player by installing the client above on that PC.
+
+1. Install and start the [Windows RaceCore host](#package-the-windows-host). PostgreSQL is optional for a two-player test; without it, RaceCore uses in-memory storage.
+2. For players on different networks, install Tailscale on the host PC and share access to **only that host PC** with the joining player. Set `RACECORE_HOST` in `%LOCALAPPDATA%\RaceCore\.env` to the host PC's Tailscale IP address, then restart RaceCore. Its default `127.0.0.1` setting accepts local connections only.
+3. Allow TCP port `8000` to the joining player's Tailscale connection. Do not create a router port-forwarding rule or expose the API publicly. RaceCore does not yet require API login, so keep it on the private network.
+4. Open `http://<host-tailscale-ip>:8000/docs`, create the session, and add a configured entry for each player's unique car ID and driver ID.
+5. Send each player the client download links above, the host Tailscale IP and port, the session ID, and their assigned car and driver IDs.
+
+Follow the [remote two-player test plan](docs/remote-two-player-test-plan.md) for the full setup, firewall checks, reconnection tests, and run sheet. If everyone is on the same trusted home network, Tailscale is unnecessary; set `RACECORE_HOST` to the host PC's LAN IP and allow TCP port `8000` from that LAN only. The default `127.0.0.1` address accepts local connections only.
+
 ## What RaceCore includes
 
 - **RaceCore host:** FastAPI application with session lifecycle APIs and interactive API documentation.
@@ -56,16 +80,6 @@ Pop-Location
 ```
 
 Start RaceCore after applying the migrations. Use `tools\stop_postgres.ps1` to stop the local database. The scripts do not install a Windows service or require an administrator account. Local data and secrets are excluded from Git; see `.env.example` for available settings.
-
-## Connect the Assetto Corsa client
-
-Deploy the Lua app to your Assetto Corsa installation, substituting its root path:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\tools\deploy_csp_client.ps1 -AssettoCorsaRoot 'E:\SteamLibrary\steamapps\common\assettocorsa'
-```
-
-Start the RaceCore host, then configure the host URL, session ID, car ID, and driver ID in the in-game RaceCore Client window. The IDs must match a car and driver in the session configuration. The client sends telemetry at 20 Hz to the host WebSocket. RaceCore exposes telemetry health and per-car sample endpoints under `/api/v1/sessions/{session_id}`. Live samples are kept in memory and are not written to PostgreSQL.
 
 ## Package the Windows host
 
