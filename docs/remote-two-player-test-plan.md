@@ -2,9 +2,18 @@
 
 ## Goal
 
-Verify that two Assetto Corsa players on separate home networks can send telemetry to one RaceCore host during the same online race, and that RaceCore keeps their identities and live states separate.
+Verify that two Assetto Corsa players on separate home networks can join the same open lobby from the Kunos server list, send telemetry to one RaceCore host, and keep their identities and live states separate.
 
-The players still join their Assetto Corsa multiplayer server using its normal connection details. The private network in this plan carries RaceCore telemetry and API traffic only.
+The Assetto Corsa lobby carries the game traffic. The private network in this plan carries RaceCore telemetry and API traffic only.
+
+## Using a public Kunos lobby
+
+- Both players must find and join the same open server-list lobby at the same time. Coordinate the exact server name, track/layout, car restrictions, and session before starting.
+- RaceCore does not read the Kunos server list or automatically collect telemetry from every lobby participant. It receives telemetry only from cars whose drivers run the RaceCore CSP client and whose car and driver IDs are configured in the RaceCore session.
+- Configure one RaceCore entry for each of the two testers. Other lobby drivers may appear in Assetto Corsa but will not appear in RaceCore unless they also run a configured RaceCore client.
+- RaceCore's race and class positions are calculated among the configured RaceCore entries. They will not match the public lobby's overall positions when other lobby drivers are not sending RaceCore telemetry.
+- Treat a full lobby, server rotation, or failure to get both players into the same lobby as a game-server coordination issue. It does not by itself indicate a RaceCore telemetry failure.
+- Keep the admin credential and the RaceCore host private. Other users in the public Assetto Corsa lobby do not need or receive Tailscale access.
 
 ## Current remote-access requirements
 
@@ -46,7 +55,7 @@ Use Tailscale as a private network between the two PCs. Its device traffic is en
 
 - [ ] Record date, RaceCore version, CSP version, Assetto Corsa version, track, cars, and both players' regions.
 - [ ] Record which PC hosts RaceCore and whether PostgreSQL persistence is enabled.
-- [ ] Confirm both players can join the same Assetto Corsa multiplayer server and session.
+- [ ] Confirm both players can join the same open Kunos server-list lobby and session. Record its name, track/layout, region if shown, and car restrictions.
 - [ ] Confirm both PCs show as connected in Tailscale and Player B can open the host's `/health` endpoint.
 - [ ] Confirm both session entries have unique car IDs and driver IDs.
 - [ ] Confirm each CSP client is configured with the host's Tailscale IP, the same session ID, and its own car and driver IDs.
@@ -58,6 +67,7 @@ Use Tailscale as a private network between the two PCs. Its device traffic is en
 - [ ] Open `/api/v1/sessions/{session_id}/cars/{car_id}/telemetry` for each car. Confirm each history contains only that player's car and driver IDs, and that samples continue arriving.
 - [ ] Compare displayed speed, gear, throttle, brake, lap, and pit state with each player's cockpit values. Record any fields that look wrong or update slowly.
 - [ ] Check `/api/v1/sessions/{session_id}/race-state`. Confirm both entries appear and the reported order changes as the players move around the track.
+- [ ] Compare RaceCore order with the in-game lobby order, accounting for the fact RaceCore only ranks configured testers whose clients are sending telemetry.
 - [ ] Record each client's round-trip latency and the host's reported packet age, sequence gaps, and connection state.
 
 ### C. Race and network behavior

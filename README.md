@@ -12,7 +12,7 @@ If someone else is hosting RaceCore, you only need the in-game client. You do **
 
 1. Download both client files: [AC_RaceCore.lua](https://raw.githubusercontent.com/Dranneken/Assetto-Corsa-RaceCore/main/client/csp_lua/AC_RaceCore.lua) and [manifest.ini](https://raw.githubusercontent.com/Dranneken/Assetto-Corsa-RaceCore/main/client/csp_lua/manifest.ini). [Browse the client folder](https://github.com/Dranneken/Assetto-Corsa-RaceCore/tree/main/client/csp_lua).
 2. Create `assettocorsa/apps/lua/AC_RaceCore` in your Assetto Corsa installation and put both downloaded files in that folder.
-3. Enable **RaceCore Client** in the CSP Apps settings, then start Assetto Corsa and join the race using the host's normal multiplayer server details.
+3. Enable **RaceCore Client** in the CSP Apps settings, then start Assetto Corsa and join the same open lobby from the Kunos server list as the host. Coordinate its server name, track/layout, and car restrictions first.
 4. If the RaceCore host is on another network, install and connect Tailscale, then accept the host's device-sharing invitation. In the in-game RaceCore Client window, set Host to the Tailscale address and port the host gives you, such as `100.x.y.z:8000`.
 5. Enter the session ID, car ID, and driver ID supplied by the RaceCore host, then connect. The IDs must match your configured session entry.
 
@@ -22,12 +22,12 @@ You need the same Assetto Corsa track, car, and other content required by the mu
 
 The host is the one PC that runs the RaceCore API for the session. The Assetto Corsa multiplayer server is separate; RaceCore does not host the game server. The host can also join the race as a player by installing the client above on that PC.
 
-1. Install and start the [Windows RaceCore host](#package-the-windows-host). PostgreSQL is optional for a two-player test; without it, RaceCore uses in-memory storage.
+1. Install and start the [Windows RaceCore host](#package-the-windows-host). PostgreSQL is optional for a two-player test; without it, RaceCore uses in-memory storage. The Assetto Corsa multiplayer lobby is separate and may be an open server selected from the Kunos server list.
 2. For players on different networks, install Tailscale on the host PC and share access to **only that host PC** with the joining player. Set `RACECORE_HOST` in `%LOCALAPPDATA%\RaceCore\.env` to the host PC's Tailscale IP address, then restart RaceCore. Its default `127.0.0.1` setting accepts local connections only.
 3. Save the temporary admin username and password printed during host installation. They are stored in `%LOCALAPPDATA%\RaceCore\.env` and are for the RaceCore operator; do not send them to joining players.
 4. Allow TCP port `8000` to the joining player's Tailscale connection. Do not create a router port-forwarding rule or expose the API publicly. Admin REST operations require the temporary credential; the CSP telemetry stream does not, so keep the host on the private network.
-5. Open `http://<host-tailscale-ip>:8000/docs`, select **Authorize**, enter the admin credential, create the session, and add a configured entry for each player's unique car ID and driver ID.
-6. Send each player the client download links above, the host Tailscale IP and port, the session ID, and their assigned car and driver IDs. They do not need your admin credential.
+5. Open `http://<host-tailscale-ip>:8000/docs`, select **Authorize**, enter the admin credential, create the session, and add a configured entry for each RaceCore tester's unique car ID and driver ID.
+6. Send each player the client download links above, the host Tailscale IP and port, the session ID, and their assigned car and driver IDs. They do not need your admin credential. RaceCore does not discover or read telemetry from other public-lobby participants.
 
 Follow the [remote two-player test plan](docs/remote-two-player-test-plan.md) for the full setup, firewall checks, reconnection tests, and run sheet. If everyone is on the same trusted home network, Tailscale is unnecessary; set `RACECORE_HOST` to the host PC's LAN IP and allow TCP port `8000` from that LAN only. The default `127.0.0.1` address accepts local connections only.
 
