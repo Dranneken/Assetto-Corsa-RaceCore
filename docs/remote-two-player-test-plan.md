@@ -10,7 +10,7 @@ The players still join their Assetto Corsa multiplayer server using its normal c
 
 - The packaged host currently binds to `127.0.0.1` by default. That accepts connections only from the host PC. For this test, set `RACECORE_HOST` to the host PC's Tailscale IP in `%LOCALAPPDATA%\RaceCore\.env`, then restart RaceCore.
 - The CSP client also defaults to `127.0.0.1:8000`. On both players' PCs, set its Host field to `<host-tailscale-ip>:8000`.
-- RaceCore's API does not yet require a user login. Keep it on a private network for this test. Do not configure router port forwarding or expose port 8000 to the public internet.
+- Session management and race-state REST endpoints require the temporary RaceCore admin username and password. The CSP WebSocket telemetry stream does not use that login, so keep the host on a private network for this test. Do not configure router port forwarding or expose port 8000 to the public internet. The joining player does not need the admin credential.
 
 ## Recommended network setup
 
@@ -26,8 +26,9 @@ Use Tailscale as a private network between the two PCs. Its device traffic is en
    ```
 
    Replace the example address with the host's actual Tailscale IP. Restart the RaceCore host after changing the file. Binding to that address keeps RaceCore off the host's other network interfaces.
-4. Allow inbound TCP port `8000` to the host over Tailscale. Keep the rule limited to the other player's Tailscale address where the firewall supports it. Do not add a router port-forwarding rule.
-5. From Player B's PC, confirm the host is reachable:
+4. Save the temporary admin credential shown by the host installer for the RaceCore operator. Do not send it to the joining player.
+5. Allow inbound TCP port `8000` to the host over Tailscale. Keep the rule limited to the other player's Tailscale address where the firewall supports it. Do not add a router port-forwarding rule.
+6. From Player B's PC, confirm the host is reachable:
 
    ```powershell
    Test-NetConnection 100.x.y.z -Port 8000
@@ -35,8 +36,9 @@ Use Tailscale as a private network between the two PCs. Its device traffic is en
    ```
 
    The health response should report `status: ok` and `service: racecore`.
-6. In both CSP RaceCore Client windows, set Host to `100.x.y.z:8000`. Configure the same session ID, but a different configured car ID and driver ID for each player.
-7. Confirm both configured entries exist in the session before connecting the CSP clients. RaceCore rejects telemetry whose session, car, or driver identity does not match an entry.
+7. From the host PC, open `http://100.x.y.z:8000/docs`, choose **Authorize**, enter the admin credential, and create the session with one entry for each player.
+8. In both CSP RaceCore Client windows, set Host to `100.x.y.z:8000`. Configure the same session ID, but a different configured car ID and driver ID for each player.
+9. Confirm both configured entries exist in the session before connecting the CSP clients. RaceCore rejects telemetry whose session, car, or driver identity does not match an entry.
 
 ## Test checklist
 

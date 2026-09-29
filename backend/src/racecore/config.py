@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,6 +25,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     database_url: str | None = None
     shutdown_token: str | None = None
+    admin_username: str | None = None
+    admin_password: SecretStr | None = None
 
     model_config = SettingsConfigDict(
         env_prefix="RACECORE_",

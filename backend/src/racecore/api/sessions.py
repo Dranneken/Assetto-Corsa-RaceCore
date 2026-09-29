@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import (
     APIRouter,
+    Depends,
     Header,
     HTTPException,
     Query,
@@ -22,6 +23,7 @@ from racecore.api.schemas import (
     RaceStateResponse,
     SessionResponse,
 )
+from racecore.api.security import require_admin
 from racecore.domain.sessions import ConnectionStatus, InvalidSessionCommand
 from racecore.domain.store import store
 from racecore.domain.telemetry import TelemetryPacket, telemetry_collector
@@ -43,7 +45,12 @@ def _accept_telemetry(session_id: UUID, packet: TelemetryPacket) -> None:
         raise ValueError("Session or configured car no longer exists")
 
 
-@router.post("", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=SessionResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
+)
 def create_session(
     request: CreateSessionRequest,
     actor: str = Header(default="operator", alias="X-RaceCore-Actor"),
@@ -52,12 +59,16 @@ def create_session(
     return SessionResponse.from_session(session)
 
 
-@router.get("", response_model=list[SessionResponse])
+@router.get("", response_model=list[SessionResponse], dependencies=[Depends(require_admin)])
 def list_sessions() -> list[SessionResponse]:
     return [SessionResponse.from_session(session) for session in store.list_sessions()]
 
 
-@router.get("/{session_id}", response_model=SessionResponse)
+@router.get(
+    "/{session_id}",
+    response_model=SessionResponse,
+    dependencies=[Depends(require_admin)],
+)
 def get_session(session_id: UUID) -> SessionResponse:
     session = store.get_session(session_id)
     if session is None:
@@ -65,7 +76,11 @@ def get_session(session_id: UUID) -> SessionResponse:
     return SessionResponse.from_session(session)
 
 
-@router.post("/{session_id}/commands", response_model=CommandResponse)
+@router.post(
+    "/{session_id}/commands",
+    response_model=CommandResponse,
+    dependencies=[Depends(require_admin)],
+)
 def issue_command(
     session_id: UUID,
     request: CommandRequest,
@@ -80,7 +95,11 @@ def issue_command(
     return CommandResponse(session=SessionResponse.from_session(session), event=event)
 
 
-@router.get("/{session_id}/race-state", response_model=RaceStateResponse)
+@router.get(
+    "/{session_id}/race-state",
+    response_model=RaceStateResponse,
+    dependencies=[Depends(require_admin)],
+)
 def get_race_state(session_id: UUID) -> RaceStateResponse:
     session = store.get_session(session_id)
     if session is None:
@@ -153,7 +172,7 @@ async def telemetry_stream(websocket: WebSocket, session_id: UUID) -> None:
         store.set_connection_status(session_id, car_id, ConnectionStatus.DISCONNECTED)
 
 
-@router.get("/{session_id}/telemetry/health")
+@router.get("/{session_id}/telemetry/health", dependencies=[Depends(require_admin)])
 def get_telemetry_health(session_id: UUID) -> list[dict[str, object]]:
     session = store.get_session(session_id)
     if session is None:
@@ -168,7 +187,10 @@ def get_telemetry_health(session_id: UUID) -> list[dict[str, object]]:
     return [item.model_dump(mode="json") for item in health]
 
 
-@router.get("/{session_id}/cars/{car_id}/telemetry")
+@router.get(
+    "/{session_id}/cars/{car_id}/telemetry",
+    dependencies=[Depends(require_admin)],
+)
 def get_car_telemetry_history(
     session_id: UUID,
     car_id: str,
@@ -185,7 +207,11 @@ def get_car_telemetry_history(
     ]
 
 
-@router.patch("/{session_id}/cars/{car_id}", response_model=RaceStateResponse)
+@router.patch(
+    "/{session_id}/cars/{car_id}",
+    response_model=RaceStateResponse,
+    dependencies=[Depends(require_admin)],
+)
 def update_car_state(
     session_id: UUID,
     car_id: str,

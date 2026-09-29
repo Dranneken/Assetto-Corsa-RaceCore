@@ -73,6 +73,26 @@ if (-not ($configLines | Where-Object { $_ -match '^RACECORE_SHUTDOWN_TOKEN=' })
   $shutdownToken = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
   $configLines += "RACECORE_SHUTDOWN_TOKEN=$shutdownToken"
 }
+$adminCredentialsGenerated = $false
+if (-not ($configLines | Where-Object { $_ -match '^RACECORE_ADMIN_USERNAME=.+$' })) {
+  $configLines = @($configLines | Where-Object { $_ -notmatch '^RACECORE_ADMIN_USERNAME=' })
+  $configLines += 'RACECORE_ADMIN_USERNAME=race-admin'
+}
+if (-not ($configLines | Where-Object { $_ -match '^RACECORE_ADMIN_PASSWORD=.+$' })) {
+  $configLines = @($configLines | Where-Object { $_ -notmatch '^RACECORE_ADMIN_PASSWORD=' })
+  $adminEntropy = New-Object 'Byte[]' 32
+  $adminRandom = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  try {
+    $adminRandom.GetBytes($adminEntropy)
+  }
+  finally {
+    $adminRandom.Dispose()
+  }
+  $adminPassword = [Convert]::ToBase64String($adminEntropy).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+  [Array]::Clear($adminEntropy, 0, $adminEntropy.Length)
+  $configLines += "RACECORE_ADMIN_PASSWORD=$adminPassword"
+  $adminCredentialsGenerated = $true
+}
 [System.IO.File]::WriteAllLines($configFile, $configLines, [System.Text.UTF8Encoding]::new($false))
 
 $previousEnvFile = $env:RACECORE_ENV_FILE
@@ -101,3 +121,9 @@ finally {
 Write-Output "Installed and started RaceCore $version."
 Write-Output "App: $versionRoot"
 Write-Output "Config and logs: $appDataRoot"
+if ($adminCredentialsGenerated) {
+  $adminUsername = ($configLines | Where-Object { $_ -match '^RACECORE_ADMIN_USERNAME=' } | Select-Object -Last 1) -replace '^RACECORE_ADMIN_USERNAME=', ''
+  Write-Output "Temporary RaceCore admin username: $adminUsername"
+  Write-Output "Temporary RaceCore admin password: $adminPassword"
+  Write-Output 'Save this password securely. It is shown only when generated.'
+}

@@ -57,6 +57,6 @@ The original detailed plan is preserved in [`ToDoList.txt`](ToDoList.txt). Work 
 ## Milestone 5: Analytics and operations
 
 - [ ] Race and driver reports
-- [ ] Authentication and role-based access control
+- [ ] Full user accounts and role-based access control (temporary admin HTTP Basic credential is available for testing)
 - [ ] Monitoring, deployment, backup, and recovery
 - [ ] Evaluate Redis and container deployment when the local application is established

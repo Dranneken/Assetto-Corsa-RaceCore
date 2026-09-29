@@ -2,13 +2,19 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 
 from racecore.main import app
 
 
 @pytest.fixture
-def client() -> TestClient:
+def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    from racecore.config import settings
+
+    monkeypatch.setattr(settings, "admin_username", "test-admin")
+    monkeypatch.setattr(settings, "admin_password", SecretStr("test-password"))
     with TestClient(app) as test_client:
+        test_client.auth = ("test-admin", "test-password")
         yield test_client
 
 

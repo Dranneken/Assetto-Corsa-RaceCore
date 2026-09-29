@@ -4,7 +4,7 @@ RaceCore is a local race-control host for Assetto Corsa. It combines a FastAPI b
 
 The host owns race sessions and authoritative race state. The in-game app sends car telemetry to the host. The source repository stays separate from the Assetto Corsa installation; only the Lua client is deployed into the game.
 
-> **Development status:** The session and race-state APIs, telemetry ingestion, in-memory live state, persistence layer, and Windows host packaging are implemented. The Control dashboard is currently a scaffold. Incident review, reports, authentication, and first-run configuration are still on the roadmap. This is a pre-release project; it is not v1.0.
+> **Development status:** The session and race-state APIs, telemetry ingestion, in-memory live state, persistence layer, temporary admin HTTP Basic authentication, and Windows host packaging are implemented. The Control dashboard is currently a scaffold. Incident review, reports, full user accounts and roles, and first-run configuration are still on the roadmap. This is a pre-release project; it is not v1.0.
 
 ## Joining a race as a client
 
@@ -24,9 +24,10 @@ The host is the one PC that runs the RaceCore API for the session. The Assetto C
 
 1. Install and start the [Windows RaceCore host](#package-the-windows-host). PostgreSQL is optional for a two-player test; without it, RaceCore uses in-memory storage.
 2. For players on different networks, install Tailscale on the host PC and share access to **only that host PC** with the joining player. Set `RACECORE_HOST` in `%LOCALAPPDATA%\RaceCore\.env` to the host PC's Tailscale IP address, then restart RaceCore. Its default `127.0.0.1` setting accepts local connections only.
-3. Allow TCP port `8000` to the joining player's Tailscale connection. Do not create a router port-forwarding rule or expose the API publicly. RaceCore does not yet require API login, so keep it on the private network.
-4. Open `http://<host-tailscale-ip>:8000/docs`, create the session, and add a configured entry for each player's unique car ID and driver ID.
-5. Send each player the client download links above, the host Tailscale IP and port, the session ID, and their assigned car and driver IDs.
+3. Save the temporary admin username and password printed during host installation. They are stored in `%LOCALAPPDATA%\RaceCore\.env` and are for the RaceCore operator; do not send them to joining players.
+4. Allow TCP port `8000` to the joining player's Tailscale connection. Do not create a router port-forwarding rule or expose the API publicly. Admin REST operations require the temporary credential; the CSP telemetry stream does not, so keep the host on the private network.
+5. Open `http://<host-tailscale-ip>:8000/docs`, select **Authorize**, enter the admin credential, create the session, and add a configured entry for each player's unique car ID and driver ID.
+6. Send each player the client download links above, the host Tailscale IP and port, the session ID, and their assigned car and driver IDs. They do not need your admin credential.
 
 Follow the [remote two-player test plan](docs/remote-two-player-test-plan.md) for the full setup, firewall checks, reconnection tests, and run sheet. If everyone is on the same trusted home network, Tailscale is unnecessary; set `RACECORE_HOST` to the host PC's LAN IP and allow TCP port `8000` from that LAN only. The default `127.0.0.1` address accepts local connections only.
 
@@ -65,7 +66,7 @@ Push-Location backend
 Pop-Location
 ```
 
-The API listens at `http://127.0.0.1:8000`. Check `/health` for liveness, open `/docs` for the interactive API documentation, and use `/api/v1/sessions` for session operations. If `RACECORE_DATABASE_URL` is not set, RaceCore uses its in-memory store.
+The API listens at `http://127.0.0.1:8000`. Check `/health` for liveness and open `/docs` for the interactive API documentation. Session management and race-state endpoints require `RACECORE_ADMIN_USERNAME` and `RACECORE_ADMIN_PASSWORD`; configure both in your ignored local `.env` before using those endpoints. Copy `.env.example` as a template and replace its password placeholder with a unique random value. If `RACECORE_DATABASE_URL` is not set, RaceCore uses its in-memory store.
 
 ### Optional PostgreSQL
 
@@ -130,7 +131,7 @@ This is the current high-level roadmap. The detailed task checklist is in [`TODO
 - Telemetry interpolation and client-side update-rate tuning.
 - Incident detection and steward review, with detection kept separate from penalty decisions.
 - Evidence viewing and export, broadcast tools, and post-race results.
-- Race and driver reports, authentication and roles, monitoring, deployment, backup, and recovery.
+- Race and driver reports, full user accounts and role-based access control, monitoring, deployment, backup, and recovery.
 - Evaluate Redis and container deployment after the local application is established.
 
 ## Repository layout
