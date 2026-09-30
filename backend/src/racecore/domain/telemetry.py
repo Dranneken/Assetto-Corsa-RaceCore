@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from datetime import UTC, datetime
-from math import isfinite
+from math import floor, isfinite
 from threading import RLock
 from uuid import UUID
 
@@ -145,6 +145,67 @@ class TelemetryCollector:
         with self._lock:
             samples = self._history.get((session_id, car_id), ())
             return list(samples)[-limit:]
+
+    def interpolate(
+        self, session_id: UUID, car_id: str, at: datetime
+    ) -> ReceivedTelemetry | None:
+        """Interpolate continuous values at a time bracketed by buffered samples."""
+        with self._lock:
+            samples = tuple(self._history.get((session_id, car_id), ()))
+
+        if not samples:
+            return None
+        if at.tzinfo is None:
+            raise ValueError("Interpolation time must include a timezone")
+        at = at.astimezone(UTC)
+
+        before = next(
+            (sample for sample in reversed(samples) if sample.received_at <= at), None
+        )
+        after = next((sample for sample in samples if sample.received_at >= at), None)
+        if before is None or after is None:
+            return None
+        if before.received_at == after.received_at:
+            return before
+
+        left = before.packet
+        right = after.packet
+        ratio = (at - before.received_at).total_seconds() / (
+            after.received_at - before.received_at
+        ).total_seconds()
+
+        def linear(a: float, b: float) -> float:
+            return a + (b - a) * ratio
+
+        values: dict[str, object] = {}
+        for field in (
+            "speed_kmh",
+            "throttle",
+            "brake",
+            "steering",
+            "fuel_liters",
+            "track_length_m",
+            "damage_percent",
+        ):
+            a, b = getattr(left, field), getattr(right, field)
+            if a is not None and b is not None:
+                values[field] = linear(a, b)
+
+        for field in ("tyre_temperatures_c", "tyre_pressures_psi", "position_xyz"):
+            a, b = getattr(left, field), getattr(right, field)
+            if len(a) == len(b):
+                values[field] = [linear(x, y) for x, y in zip(a, b)]
+
+        # Interpolate normalized progress across the finish line without moving
+        # backwards around the track (for example, 0.99 to 0.01).
+        progress_left = left.current_lap + left.track_position
+        progress_right = right.current_lap + right.track_position
+        values["current_lap"] = floor(linear(progress_left, progress_right))
+        values["track_position"] = linear(progress_left, progress_right) % 1.0
+        values["sampled_at"] = at
+
+        packet = left.model_copy(update=values)
+        return ReceivedTelemetry(packet=packet, received_at=at)
 
     def health(self, session_id: UUID, car_ids: list[str]) -> list[CarTelemetryHealth]:
         now = datetime.now(UTC)

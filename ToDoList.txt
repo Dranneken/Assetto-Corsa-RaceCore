@@ -112,13 +112,17 @@ Short name: RaceCore
 * [x] Damage
 * [x] Car state
 * [x] Track position
+* [x] Build the three-window in-game driver HUD; widgets can be used with or without the RaceCore host
+  * [x] Leaderboard with position, driver name, tyre compound, interval to the car ahead, ping, and best/last lap time
+  * [x] Gearbox display with gear, speed, RPM dial, and shift lights; omit fuel
+  * [x] Steering input circle with a white angle arc, plus throttle and brake traces
 
 ### Live Processing
 
 * [x] Latest state stored in RAM
 * [x] Rolling telemetry buffer
 * [x] Per-driver telemetry history
-* [ ] Telemetry interpolation
+* [x] Telemetry interpolation
 * [x] Stale-data detection
 * [x] Driver latency monitoring
 * [x] Connection quality monitoring

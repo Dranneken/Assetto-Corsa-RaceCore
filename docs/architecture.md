@@ -18,7 +18,7 @@ Browser interfaces and the in-game client consume role-scoped REST and WebSocket
 
 ## Initial implementation boundary
 
-The backend includes a liveness endpoint, session configuration and transitions, an in-memory authoritative race state, session/race-state REST endpoints, a bounded telemetry collector, and optional PostgreSQL persistence. The CSP Lua client is deployed separately into the game’s Lua apps folder. Telemetry interpolation, damage normalization, role authentication, and the working race-operations UI remain future work.
+The backend includes a liveness endpoint, session configuration and transitions, an in-memory authoritative race state, session/race-state REST endpoints, a bounded telemetry collector with timestamp-based interpolation, and optional PostgreSQL persistence. The CSP Lua client is deployed separately into the game’s Lua apps folder. Damage normalization, role authentication, and the working race-operations UI remain future work.
 
 ## Technology choices
 

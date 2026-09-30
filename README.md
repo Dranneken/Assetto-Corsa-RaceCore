@@ -41,11 +41,21 @@ Follow the [remote two-player test plan](docs/remote-two-player-test-plan.md) fo
 
 - **RaceCore host:** FastAPI application with session lifecycle APIs and interactive API documentation.
 - **Race state:** Live car state, race and class order, timing data, pit and driver status, connection health, and audit events.
-- **Telemetry:** CSP WebSocket ingestion, validation, timestamps, in-memory latest state and bounded history, packet-gap and staleness tracking, and connection metrics.
+- **Telemetry:** CSP WebSocket ingestion, validation, timestamps, in-memory latest state and bounded history, timestamp interpolation for buffered samples, packet-gap and staleness tracking, and connection metrics.
 - **Persistence:** Optional PostgreSQL storage for durable session data, entries, completed laps, results, and audit events. High-frequency telemetry stays in RAM.
-- **CSP client:** In-game configuration UI and telemetry sender.
+- **CSP client:** In-game configuration UI, telemetry sender, and three individually toggleable driver HUDs. They work from local Assetto Corsa data with or without a RaceCore host.
 - **Windows host package:** A versioned, user-level app bundle with install, start, stop, log, and upgrade scripts.
 - **Control UI:** React, TypeScript, and Vite scaffold for the future Race Director dashboard.
+
+## In-game driver HUD
+
+The CSP app drawer contains three separate RaceCore windows that can be shown or hidden individually:
+
+- **Leaderboard:** position, driver name, tyre compound, interval to the car ahead, ping, and best lap in practice/qualifying or last lap in a race.
+- **Gearbox:** a large gear dial, RPM arc and shift lights, plus speed and RPM readouts. Fuel is not displayed.
+- **Traces:** a hollow steering circle whose white arc follows steering input, plus live throttle and brake traces.
+
+The HUDs read the local Assetto Corsa session, so the leaderboard and driving displays remain usable when the RaceCore host is disconnected. Connecting to a host adds RaceCore session telemetry. Copy `AC_RaceCore.lua` and `manifest.ini` into `assettocorsa/apps/lua/AC_RaceCore`, enable **RaceCore Client** in CSP, and restart or reload the app after updating its files.
 
 ## Requirements
 
@@ -142,6 +152,7 @@ This is the current high-level roadmap. The detailed task checklist is in [`TODO
 - Race session creation and configuration snapshots, lifecycle state machine, reset/restart operations, and audit log.
 - Authoritative live car state and overall/class race order, including available timing, pit, driver, connection, retirement, and damage fields.
 - CSP telemetry sender and host ingestion with packet validation, timestamps, bounded in-memory history, stale and dropped-packet tracking, and connection health metrics.
+- Three individually toggleable, host-independent CSP driver HUDs for the leaderboard, gearbox, and steering/pedals.
 - Local PostgreSQL setup and lifecycle scripts, plus a versioned, independently installable Windows host package.
 
 ### In progress
@@ -152,7 +163,7 @@ This is the current high-level roadmap. The detailed task checklist is in [`TODO
 
 ### Planned
 
-- Telemetry interpolation and client-side update-rate tuning.
+- Client-side update-rate tuning.
 - Public deployment of the RaceCore backend on a VPS, with a stable HTTPS/WSS endpoint and authenticated telemetry clients. Players should not need Tailscale; this is not implemented yet.
 - Validate client and dashboard update targets: RC Client ~2–5 Hz, RC Control ~5–10 Hz, RC Broadcast ~2–5 Hz, and RC Steward mostly event-driven.
 - Measure telemetry capacity with increasing client counts, up to the 50-car goal; no 50-car capacity claim is established yet.

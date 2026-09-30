@@ -1,5 +1,6 @@
 """REST endpoints for sessions, commands, and authoritative race state."""
 
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import (
@@ -43,6 +44,41 @@ def _accept_telemetry(session_id: UUID, packet: TelemetryPacket) -> None:
     telemetry_collector.record(session_id, packet)
     if store.apply_live_telemetry(session_id, packet) is None:
         raise ValueError("Session or configured car no longer exists")
+
+
+def _driver_leaderboard(session_id: UUID) -> list[dict[str, object]]:
+    session = store.get_session(session_id)
+    if session is None:
+        return []
+    health_by_car = {}
+    for health in telemetry_collector.health(session_id, list(session.car_states)):
+        health_by_car[health.car_id] = health
+        store.set_connection_status(
+            session_id, health.car_id, ConnectionStatus(health.connection_status)
+        )
+    session = store.get_session(session_id)
+    if session is None:
+        return []
+    fields = {
+        "car_id",
+        "driver_name",
+        "class_name",
+        "current_lap",
+        "position",
+        "class_position",
+        "gap_to_ahead_seconds",
+        "tyre_temperatures_c",
+        "pit_status",
+        "driver_status",
+        "connection_status",
+    }
+    result = []
+    for car in session.leaderboard():
+        entry = car.model_dump(include=fields, mode="json")
+        health = health_by_car.get(car.car_id)
+        entry["ping_ms"] = health.client_round_trip_ms if health else None
+        result.append(entry)
+    return result
 
 
 @router.post(
@@ -156,6 +192,7 @@ async def telemetry_stream(websocket: WebSocket, session_id: UUID) -> None:
         return
 
     await websocket.accept()
+    accepted_packets = 0
     try:
         while True:
             payload = await websocket.receive_json()
@@ -167,7 +204,14 @@ async def telemetry_stream(websocket: WebSocket, session_id: UUID) -> None:
             except (ValueError, ValidationError) as exc:
                 await websocket.send_json({"accepted": False, "error": str(exc)})
                 continue
-            await websocket.send_json({"accepted": True, "sequence": packet.sequence})
+            accepted_packets += 1
+            response: dict[str, object] = {
+                "accepted": True,
+                "sequence": packet.sequence,
+            }
+            if accepted_packets % 4 == 0:
+                response["leaderboard"] = _driver_leaderboard(session_id)
+            await websocket.send_json(response)
     except WebSocketDisconnect:
         store.set_connection_status(session_id, car_id, ConnectionStatus.DISCONNECTED)
 
@@ -205,6 +249,32 @@ def get_car_telemetry_history(
         sample.model_dump(mode="json")
         for sample in telemetry_collector.history(session_id, car_id, limit)
     ]
+
+
+@router.get(
+    "/{session_id}/cars/{car_id}/telemetry/interpolated",
+    dependencies=[Depends(require_admin)],
+)
+def get_interpolated_car_telemetry(
+    session_id: UUID,
+    car_id: str,
+    at: datetime = Query(description="Timezone-aware timestamp bracketed by telemetry samples"),
+) -> dict[str, object]:
+    session = store.get_session(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if car_id not in session.car_states:
+        raise HTTPException(status_code=404, detail="Car is not configured in this session")
+    try:
+        sample = telemetry_collector.interpolate(session_id, car_id, at)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if sample is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Timestamp is not bracketed by buffered telemetry samples",
+        )
+    return sample.model_dump(mode="json")
 
 
 @router.patch(

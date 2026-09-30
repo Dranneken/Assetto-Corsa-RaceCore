@@ -32,11 +32,16 @@ The original detailed plan is preserved in [`ToDoList.txt`](ToDoList.txt). Work 
 
 - [x] Add configurable CSP WebSocket telemetry sender at 20 Hz
 - [x] Add validated in-memory latest-state and bounded per-car telemetry history APIs
+- [x] Interpolate continuous telemetry values at timestamps bracketed by buffered samples
 - [x] Derive overall/class race order from lap and normalized track position
 - [x] Track sequence gaps, packet age, client round-trip latency, and connected/stale/disconnected state
 - [x] AC telemetry collector and connection health
 - [x] In-memory live telemetry and rolling evidence buffer
 - [x] Connect the CSP Lua client to the RaceCore host and add connection-loss handling
+- [x] Build the three-window in-game driver HUD, usable with or without the RaceCore host
+  - [x] Leaderboard with position, driver name, tyre compound, interval to the car ahead, ping, and best/last lap time
+  - [x] Gearbox display with gear, speed, RPM dial, and shift lights
+  - [x] Steering input circle with a white angle arc, plus throttle and brake traces
 - [ ] Driver-specific live data API/WebSocket
 - [ ] Validate two-player telemetry across separate home networks; see [`docs/remote-two-player-test-plan.md`](docs/remote-two-player-test-plan.md)
 
