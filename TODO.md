@@ -38,10 +38,7 @@ The original detailed plan is preserved in [`ToDoList.txt`](ToDoList.txt). Work 
 - [x] AC telemetry collector and connection health
 - [x] In-memory live telemetry and rolling evidence buffer
 - [x] Connect the CSP Lua client to the RaceCore host and add connection-loss handling
-- [x] Build the three-window in-game driver HUD, usable with or without the RaceCore host
-  - [x] Leaderboard with position, driver name, tyre compound, interval to the car ahead, ping, and best/last lap time
-  - [x] Gearbox display with gear, speed, RPM dial, and shift lights
-  - [x] Steering input circle with a white angle arc, plus throttle and brake traces
+- [x] Integrate nine individually toggleable local HUD windows based on RennsportHUD 1.29, alongside RaceCore connection/configuration and host-fed live leaderboard windows
 - [ ] Driver-specific live data API/WebSocket
 - [ ] Validate two-player telemetry across separate home networks; see [`docs/remote-two-player-test-plan.md`](docs/remote-two-player-test-plan.md)
 

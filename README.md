@@ -12,9 +12,9 @@ The host owns race sessions and authoritative race state. The in-game app sends 
 
 If someone else is hosting RaceCore, you only need the in-game client. You do **not** need to install or start the RaceCore host, Python, PostgreSQL, or this repository.
 
-1. Download both client files: [AC_RaceCore.lua](https://raw.githubusercontent.com/Dranneken/Assetto-Corsa-RaceCore/main/client/csp_lua/AC_RaceCore.lua) and [manifest.ini](https://raw.githubusercontent.com/Dranneken/Assetto-Corsa-RaceCore/main/client/csp_lua/manifest.ini). [Browse the client folder](https://github.com/Dranneken/Assetto-Corsa-RaceCore/tree/main/client/csp_lua).
-2. Create `assettocorsa/apps/lua/AC_RaceCore` in your Assetto Corsa installation and put both downloaded files in that folder.
-3. Enable **RaceCore Client** in the CSP Apps settings, then start Assetto Corsa and join the same open lobby from the Kunos server list as the host. Coordinate its server name, track/layout, and car restrictions first.
+1. Download the [complete RaceCore client package](https://github.com/Dranneken/Assetto-Corsa-RaceCore/archive/refs/heads/main.zip), which includes the Lua app, HUD modules, and assets.
+2. Copy the complete contents of `client/csp_lua` into `assettocorsa/apps/lua/AC_RaceCore`.
+3. Enable **RaceCore Client** in the CSP Apps settings. Its nine RaceCore HUD panels appear as separate windows that can be enabled or hidden individually. Then start Assetto Corsa and join the same open lobby from the Kunos server list as the host. Coordinate its server name, track/layout, and car restrictions first.
 4. For the current remote test, if the RaceCore host is on another network, install and connect Tailscale, then accept the host's device-sharing invitation. In the in-game RaceCore Client window, set Host to the Tailscale address and port the host gives you, such as `100.x.y.z:8000`. Tailscale is a temporary private-test requirement; players will not need it once public hosting is implemented.
 5. Enter the session ID, car ID, and driver ID supplied by the RaceCore host, then connect. The IDs must match your configured session entry.
 
@@ -43,19 +43,17 @@ Follow the [remote two-player test plan](docs/remote-two-player-test-plan.md) fo
 - **Race state:** Live car state, race and class order, timing data, pit and driver status, connection health, and audit events.
 - **Telemetry:** CSP WebSocket ingestion, validation, timestamps, in-memory latest state and bounded history, timestamp interpolation for buffered samples, packet-gap and staleness tracking, and connection metrics.
 - **Persistence:** Optional PostgreSQL storage for durable session data, entries, completed laps, results, and audit events. High-frequency telemetry stays in RAM.
-- **CSP client:** In-game configuration UI, telemetry sender, and three individually toggleable driver HUDs. They work from local Assetto Corsa data with or without a RaceCore host.
+- **CSP client:** In-game configuration UI, telemetry sender, nine individually toggleable local HUD panels based on RennsportHUD 1.29, and a separate RaceCore host-fed live leaderboard.
 - **Windows host package:** A versioned, user-level app bundle with install, start, stop, log, and upgrade scripts.
 - **Control UI:** React, TypeScript, and Vite scaffold for the future Race Director dashboard.
 
 ## In-game driver HUD
 
-The CSP app drawer contains three separate RaceCore windows that can be shown or hidden individually:
+The RaceCore Client app includes nine individually toggleable local HUD windows: **Essentials**, **Inputs**, **Session**, **Delta**, **Sectors & Flags**, **Fuel**, **Tires**, **Personal Timing**, and **Leaderboard**. The existing RaceCore connection/configuration window and a separate **RaceCore Live Leaderboard** for host-fed session data remain in the same app. The nine HUD panels read local Assetto Corsa data.
 
-- **Leaderboard:** position, driver name, tyre compound, interval to the car ahead, ping, and best lap in practice/qualifying or last lap in a race.
-- **Gearbox:** a large gear dial, RPM arc and shift lights, plus speed and RPM readouts. Fuel is not displayed.
-- **Traces:** a hollow steering circle whose white arc follows steering input, plus live throttle and brake traces.
+RaceCore's HUD design is inspired by CMRT Complete HUD, Real Penalty, and C1XTZ's RennsportHUD 1.29. Licensing and bundled-asset credits are listed in [the client open-source notices](client/csp_lua/OPEN_SOURCE_LICENSES.md).
 
-The HUDs read the local Assetto Corsa session, so the leaderboard and driving displays remain usable when the RaceCore host is disconnected. Connecting to a host adds RaceCore session telemetry. Copy `AC_RaceCore.lua` and `manifest.ini` into `assettocorsa/apps/lua/AC_RaceCore`, enable **RaceCore Client** in CSP, and restart or reload the app after updating its files.
+Install the complete contents of `client/csp_lua` into `assettocorsa/apps/lua/AC_RaceCore`, enable **RaceCore Client** in CSP, then restart or reload the app after updating its files. Upstream attribution, GPL-3.0 license, and asset credits are in [the client open-source notices](client/csp_lua/OPEN_SOURCE_LICENSES.md) and [source credits](client/racecorehud/README.md).
 
 ## Requirements
 
@@ -63,7 +61,7 @@ The HUDs read the local Assetto Corsa session, so the leaderboard and driving di
 
 - Assetto Corsa installed and able to join the selected Kunos server-list lobby.
 - Custom Shaders Patch (CSP) installed, with the RaceCore Lua client enabled.
-- The two client files linked above, copied into `assettocorsa/apps/lua/AC_RaceCore`.
+- The complete RaceCore client folder, including its HUD modules and assets, copied into `assettocorsa/apps/lua/AC_RaceCore`.
 - The same track, car, and other content required by the public lobby.
 - For the current remote test only: Tailscale installed and connected if the RaceCore host is on a different network. It is a separate download, not part of the RaceCore app. The host must share access to its Tailscale device with you.
 - The host's private test address, session ID, and your configured car ID and driver ID. A public RaceCore server address is planned, but is not available yet.

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RaceCore HUD preview</title>
+  <style>
+    :root { color-scheme: dark; font: 14px/1.35 Arial, sans-serif; color: #f2f3f4; background: #101419; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 12px 18px; background: #171c22; border-bottom: 1px solid #303740; }
+    .toolbar strong { font-size: 15px; letter-spacing: .06em; }
+    .toolbar label { display: flex; align-items: center; gap: 7px; color: #c7ccd1; }
+    .toolbar input[type=range] { width: 105px; accent-color: #f5c424; }
+    .toolbar select, .toolbar button { color: #f2f3f4; background: #252c33; border: 1px solid #414a54; border-radius: 4px; padding: 5px 8px; }
+    .toolbar button { cursor: pointer; }
+    .hint { margin-left: auto; color: #8e989f; font-size: 12px; }
+    .stage-wrap { display: flex; justify-content: center; overflow: auto; padding: 20px; }
+    .stage { position: relative; width: 534px; height: 435px; flex: 0 0 534px; overflow: hidden; transform-origin: top center; background:
+      radial-gradient(ellipse at 50% 116%, #66727a 0, #333b42 27%, transparent 48%),
+      linear-gradient(168deg, transparent 0 52%, rgba(6,9,12,.84) 52.2% 100%),
+      linear-gradient(180deg, #7891a0 0%, #394953 43%, #1b2229 72%, #0b0e12 100%); }
+    .stage::before { content: ""; position: absolute; inset: 48% -8% -20%; opacity: .35; background: repeating-linear-gradient(8deg, transparent 0 22px, #aab5bd 23px 25px, transparent 26px 46px); transform: perspective(360px) rotateX(18deg); }
+    .stage::after { content: ""; position: absolute; width: 900px; height: 300px; left: 210px; bottom: -190px; border: 34px solid rgba(0,0,0,.9); border-radius: 50%; box-shadow: 0 -22px 55px rgba(0,0,0,.4); }
+    .hud { position: absolute; z-index: 1; color: #f4f5f6; text-shadow: 0 1px 2px #000; }
+    .hide-leaderboard .leaderboard, .hide-gearbox .gearbox, .hide-inputs .inputs { display: none; }
+
+    .leaderboard { top: 24px; left: 34px; width: 440px; padding: 0 6px 8px; background: rgba(4,6,8,.90); box-shadow: 0 8px 26px #0007; border-top: 2px solid #f4c51d; }
+    .lb-top { height: 30px; display: flex; align-items: center; position: relative; padding: 0 4px; font-size: 12px; }
+    .lb-top img { position: absolute; z-index: -0; left: -6px; top: 0; width: 270px; height: 30px; opacity: .33; object-fit: fill; }
+    .lb-session { position: relative; z-index: 1; }
+    .flag { position: absolute; right: -6px; top: 0; width: 170px; height: 30px; padding: 6px 8px; background: #08cf3d; color: #04140a; font-weight: 700; text-shadow: none; }
+    .lb-conditions { height: 24px; padding: 3px 4px; color: #bdc3c8; font-size: 11px; white-space: nowrap; }
+    .lb-grid { display: grid; grid-template-columns: 32px 146px 44px 61px 44px 113px; align-items: center; }
+    .lb-head { height: 22px; color: #c7cbd0; font-size: 11px; background: #292e33db; border-bottom: 1px solid #80858a; }
+    .lb-head span, .lb-row span { padding: 0 5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .lb-head span:not(:nth-child(2)), .lb-row span:not(:nth-child(2)) { text-align: center; }
+    .lb-row { height: 26px; font-size: 12px; background: #080a0cbd; }
+    .lb-row:nth-child(even) { background: #191d21db; }
+    .lb-row.local { color: #ffd32a; background: #352c0de8; }
+    .lb-row.offline { color: #899096; background: #252b30dd; }
+    .position { display: inline-block; min-width: 21px; margin-left: -2px; padding: 2px 3px; color: #111; background: #f2f3f3; font-weight: 700; }
+    .local .position { background: #ffd020; }
+    .driver-cell { border-left: 2px solid #2bd54b; font-weight: 600; }
+
+    .gearbox { top: 167px; left: 76px; width: 365px; height: 100px; overflow: hidden; border-radius: 50px; background: rgba(4,7,10,.88); }
+    .gear-mask { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; filter: brightness(.14); opacity: .9; }
+    .rpm-texture { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; opacity: .52; mix-blend-mode: screen; }
+    .gear-ring { position: absolute; left: 8px; top: 8px; width: 84px; height: 84px; }
+    .gear-ring .base { fill: #171b20; stroke: #696d70; stroke-width: 7; }
+    .gear-ring .progress { fill: none; stroke: #15d99b; stroke-width: 7; stroke-linecap: round; transform: rotate(135deg); transform-origin: 42px 42px; }
+    .gear { position: absolute; left: 8px; top: 8px; width: 84px; height: 84px; display: grid; place-items: center; font-size: 43px; font-weight: 700; }
+    .leds { position: absolute; left: 110px; top: 13px; display: flex; gap: 5px; }
+    .led { width: 8px; height: 8px; border-radius: 50%; background: #394047; }
+    .led.on { background: #95df42; box-shadow: 0 0 7px #95df4266; }
+    .led.on.yellow { background: #ffd028; box-shadow: 0 0 7px #ffd02866; }
+    .led.on.red { background: #ff4949; box-shadow: 0 0 7px #ff494966; }
+    .readouts { position: absolute; left: 112px; right: 14px; top: 39px; display: grid; grid-template-columns: 100px 1fr; }
+    .readout small { display: block; color: #c2c8cc; font-size: 11px; }
+    .readout b { display: block; font: 700 25px/1.05 Consolas, monospace; letter-spacing: .03em; }
+
+    .inputs { left: 108px; top: 292px; width: 235px; height: 116px; padding: 8px 10px; background: rgba(4,6,8,.89); border-top: 2px solid #f4c51d; box-shadow: 0 8px 26px #0008; }
+    .input-title { height: 23px; font-size: 12px; }
+    .input-content { display: grid; grid-template-columns: 64px 1fr; gap: 8px; }
+    .steer-label { margin: 0 0 1px; font-size: 11px; }
+    .steer { width: 54px; height: 54px; }
+    .steer circle { fill: transparent; stroke: #777e82; stroke-width: 3; }
+    .steer .angle { fill: none; stroke: white; stroke-width: 4; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 27px 27px; }
+    .pedal { height: 39px; font-size: 11px; }
+    .pedal-head { height: 16px; display: flex; justify-content: space-between; }
+    .pedal-track { position: relative; height: 19px; background: #050709; border-top: 1px solid #ffffff18; }
+    .pedal-trace { position: absolute; inset: 3px 0 2px; width: 100%; height: 14px; }
+    .pedal-trace polyline { fill: none; stroke-width: 2; }
+    .gas .pedal-trace polyline { stroke: #24d477; }
+    .brake .pedal-trace polyline { stroke: #ff4b4b; }
+    @media (max-width: 700px) { .hint { display: none; } .stage-wrap { padding: 10px; } }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <strong>RACECORE HUD PREVIEW</strong>
+    <label><input type="checkbox" data-toggle="leaderboard" checked> Leaderboard</label>
+    <label><input type="checkbox" data-toggle="gearbox" checked> Gear + RPM</label>
+    <label><input type="checkbox" data-toggle="inputs" checked> Steering + pedals</label>
+    <label>Session <select id="session"><option>Race</option><option>Practice</option><option>Qualifying</option></select></label>
+    <label>RPM <input id="rpm" type="range" min="1000" max="9000" value="2100"><output id="rpmOut">2100</output></label>
+    <label>Steer <input id="steerValue" type="range" min="-330" max="330" value="0"><output id="steerOut">0°</output></label>
+    <label>Gas <input id="gasValue" type="range" min="0" max="100" value="0"><output id="gasOut">0%</output></label>
+    <label>Brake <input id="brakeValue" type="range" min="0" max="100" value="0"><output id="brakeOut">0%</output></label>
+    <span class="hint">Values and window positions match your in-game screenshot · 534 × 435 preview</span>
+  </div>
+
+  <div class="stage-wrap"><main class="stage" id="stage">
+    <section class="hud leaderboard">
+      <div class="lb-top"><img src="../csp_lua/assets/leaderboard_dot.png" alt=""><span class="lb-session">RACE&nbsp; | &nbsp;Lap: 1</span><span class="flag">GREEN FLAG</span></div>
+      <div class="lb-conditions">Wind: 13 km/h&nbsp;&nbsp; Air: 20°C&nbsp;&nbsp; Tarmac: 25°C&nbsp;&nbsp; Grip: 100.0%</div>
+      <div class="lb-grid lb-head"><span>Pos</span><span>Driver</span><span>Tyre</span><span>Int</span><span>Ping</span><span>Last</span></div>
+      <div class="lb-grid lb-row local"><span><i class="position">1</i></span><span class="driver-cell">Kennard Carig</span><span>S</span><span>--</span><span>36</span><span>--</span></div>
+    </section>
+
+    <section class="hud gearbox">
+      <img class="gear-mask" src="../csp_lua/assets/GEARBOX.png" alt="">
+      <img class="rpm-texture" src="../csp_lua/assets/rpm_gauge_gradient.png" alt="">
+      <svg class="gear-ring" viewBox="0 0 84 84" aria-hidden="true"><circle class="base" cx="42" cy="42" r="37"></circle><circle class="progress" id="rpmArc" cx="42" cy="42" r="37" pathLength="100" stroke-dasharray="72 100"></circle></svg>
+      <span class="gear">N</span><div class="leds" id="leds"></div>
+      <div class="readouts"><div class="readout"><small>KMH</small><b>0</b></div><div class="readout"><small>RPM</small><b id="rpmNumber">2100</b></div></div>
+    </section>
+
+    <section class="hud inputs">
+      <div class="input-title">TRACES&nbsp; / &nbsp;LIVE INPUT</div>
+      <div class="input-content">
+        <div><div class="steer-label">STEER</div><svg class="steer" viewBox="0 0 54 54" aria-label="Steering input"><circle cx="27" cy="27" r="24"></circle><circle class="angle" id="steerArc" cx="27" cy="27" r="24" pathLength="100" stroke-dasharray="17 100"></circle></svg></div>
+        <div><div class="pedal gas"><div class="pedal-head"><span>GAS</span><span id="gasLabel">0%</span></div><div class="pedal-track"><svg class="pedal-trace" viewBox="0 0 160 14" preserveAspectRatio="none"><polyline id="gasTrace" points="0,12 20,11 40,9 60,8 80,6 100,5 120,4 140,2 160,2"></polyline></svg></div></div>
+          <div class="pedal brake"><div class="pedal-head"><span>BRAKE</span><span id="brakeLabel">0%</span></div><div class="pedal-track"><svg class="pedal-trace" viewBox="0 0 160 14" preserveAspectRatio="none"><polyline id="brakeTrace" points="0,12 30,12 50,11 72,12 95,12 120,11 140,12 160,11"></polyline></svg></div></div>
+        </div>
+      </div>
+    </section>
+  </main></div>
+
+  <script>
+    const stage = document.getElementById('stage');
+    const ledRoot = document.getElementById('leds');
+    for (let index = 0; index < 15; index++) {
+      const led = document.createElement('i'); led.className = 'led'; ledRoot.appendChild(led);
+    }
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const rpm = document.getElementById('rpm');
+    const steer = document.getElementById('steerValue');
+    const gas = document.getElementById('gasValue');
+    const brake = document.getElementById('brakeValue');
+    function update() {
+      const revs = Number(rpm.value), revRatio = clamp(revs / 9000, 0, 1);
+      document.getElementById('rpmOut').value = revs;
+      document.getElementById('rpmNumber').textContent = revs;
+      document.getElementById('rpmArc').style.strokeDasharray = `${revRatio * 76} 100`;
+      [...ledRoot.children].forEach((led, index) => {
+        const lit = (index + 1) / 15 <= revRatio;
+        led.className = `led${lit ? ` on${index >= 13 ? ' red' : index >= 10 ? ' yellow' : ''}` : ''}`;
+      });
+      const angle = Number(steer.value), arc = Math.abs(angle) / 330 * 47;
+      document.getElementById('steerOut').value = `${angle}°`;
+      const steerArc = document.getElementById('steerArc');
+      steerArc.style.strokeDasharray = `${arc} 100`;
+      steerArc.style.strokeDashoffset = angle < 0 ? '0' : `${-arc}`;
+      document.getElementById('gasOut').value = `${gas.value}%`;
+      document.getElementById('gasLabel').textContent = `${gas.value}%`;
+      document.getElementById('brakeOut').value = `${brake.value}%`;
+      document.getElementById('brakeLabel').textContent = `${brake.value}%`;
+      trace('gasTrace', Number(gas.value), 0.82);
+      trace('brakeTrace', Number(brake.value), 0.28);
+    }
+    function trace(id, level, variation) {
+      const points = [];
+      for (let index = 0; index <= 16; index++) {
+        const x = index * 10;
+        const wobble = Math.sin(index * 1.7) * variation * 9 + Math.sin(index * .53) * variation * 5;
+        const y = clamp(12 - level / 100 * 10 - wobble, 1, 13);
+        points.push(`${x},${y.toFixed(1)}`);
+      }
+      document.getElementById(id).setAttribute('points', points.join(' '));
+    }
+    [rpm, steer, gas, brake].forEach(control => control.addEventListener('input', update));
+    document.getElementById('session').addEventListener('change', event => {
+      const session = event.target.value;
+      document.querySelector('.lb-session').innerHTML = session === 'Race' ? 'RACE&nbsp; | &nbsp;Lap: 1' : `${session.toUpperCase()}&nbsp; | &nbsp;Time: 0:08:37&nbsp;&nbsp; Lap: 1`;
+      document.querySelector('.lb-head span:last-child').textContent = event.target.value === 'Race' ? 'Last' : 'Best';
+      document.querySelectorAll('.lb-row span:last-child').forEach(cell => cell.textContent = session === 'Race' ? '--' : '1:48.663');
+    });
+    document.querySelectorAll('[data-toggle]').forEach(control => control.addEventListener('change', () => stage.classList.toggle(`hide-${control.dataset.toggle}`, !control.checked)));
+    function fitStage() {
+      const scale = Math.min(1, (window.innerWidth - 40) / 534);
+      stage.style.transform = `scale(${scale})`;
+      stage.parentElement.style.height = `${435 * scale}px`;
+    }
+    window.addEventListener('resize', fitStage);
+    fitStage(); update();
+  </script>
+</body>
+</html>

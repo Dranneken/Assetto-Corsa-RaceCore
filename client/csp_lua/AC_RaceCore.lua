@@ -23,6 +23,8 @@ local latestDriving = nil
 local inputHistory = { steering = {}, throttle = {}, brake = {} }
 local inputHistoryLimit = 80
 
+require('RaceCoreHUD')
+
 local function sectorTimes(car)
   local times = {}
   for i = 0, 2 do
@@ -236,6 +238,7 @@ local function localLeaderboard()
 end
 
 function script.update(dt)
+  script.raceCoreHudUpdate(dt)
   if sim.isInMainMenu or sim.isReplayActive then return end
 
   local car = ac.getCar(0)
@@ -301,6 +304,10 @@ local function drawPanelBackground(width, height, showAccent)
   if showAccent ~= false then
     ui.drawRectFilled(vec2(0, 0), vec2(width, 2), rgbm(1, 0.78, 0.08, 0.95))
   end
+end
+
+local function drawCmrtTexture(name, p1, p2, tint)
+  ui.drawImage('apps/lua/AC_RaceCore/assets/' .. name, p1, p2, tint)
 end
 
 local function sessionCode()
@@ -448,6 +455,10 @@ function script.windowLeaderboard()
   local weather = string.format('AIR %.0f°   ROAD %.0f°', sim.ambientTemperature or 0, sim.roadTemperature or 0)
   local headerColor = rgbm(0.70, 0.73, 0.76, 1)
   ui.drawRectFilled(vec2(6, 54), vec2(434, 76), rgbm(0.16, 0.18, 0.20, 0.88))
+  ui.drawImageQuad(
+    'apps/lua/AC_RaceCore/assets/leaderboard_dot.png',
+    vec2(0, 0), vec2(270, 0), vec2(270, 30), vec2(0, 30),
+    rgbm(1, 1, 1, 0.42))
   local isRace = sim.raceSessionType == ac.SessionType.Race
   drawLeaderboardCell('POS', 8, 25, 56, headerColor, vec2(0.5, 0))
   drawLeaderboardCell('DRIVER', 42, 142, 56, headerColor)
@@ -504,12 +515,16 @@ function script.windowGearRPM()
   local driving = latestDriving
   local ratio = driving and math.saturate(driving.rpm / math.max(1, driving.rpm_limit)) or 0
   local panelColor = ratio >= 0.93 and rgbm(0.11, 0.018, 0.024, 0.94) or rgbm(0.015, 0.018, 0.024, 0.90)
-  ui.drawRectFilled(vec2(0, 0), vec2(340, 112), panelColor, 56)
+  drawCmrtTexture('GEARBOX.png', vec2(0, 0), vec2(365, 100), panelColor)
+  ui.drawImageQuad(
+    'apps/lua/AC_RaceCore/assets/rpm_gauge_gradient.png',
+    vec2(0, 0), vec2(365, 0), vec2(365, 100), vec2(0, 100),
+    rgbm(1, 1, 1, 0.42))
   local gearLabel = driving and (driving.gear < 0 and 'R' or driving.gear == 0 and 'N' or tostring(driving.gear)) or '--'
   local ringColor = ratio >= 0.93 and rgbm(1, 0.20, 0.12, 1)
     or (ratio >= 0.72 and rgbm(1, 0.76, 0.08, 1) or rgbm(0.28, 0.88, 0.43, 1))
 
-  local center, radius = vec2(55, 56), 36
+  local center, radius = vec2(50, 50), 34
   ui.drawCircle(center, radius, rgbm(0.29, 0.31, 0.33, 0.85), 64, 8)
   if ratio > 0 then
     local arcStart = math.rad(135)
@@ -521,7 +536,7 @@ function script.windowGearRPM()
 
   local dotCount = 15
   for i = 1, dotCount do
-    local x = 116 + (i - 1) * 14
+    local x = 112 + (i - 1) * 14
     local color = rgbm(0.20, 0.22, 0.24, 0.82)
     if i / dotCount <= ratio then
       color = i >= 14 and rgbm(1, 0.20, 0.12, 1)
@@ -530,10 +545,10 @@ function script.windowGearRPM()
     ui.drawCircleFilled(vec2(x, 18), 4, color, 16)
   end
 
-  ui.dwriteDrawTextClipped('KMH', 12, vec2(111, 48), vec2(190, 64), ui.Alignment.Start, ui.Alignment.Center, false, rgbm(0.70, 0.73, 0.76, 1))
-  ui.dwriteDrawTextClipped('RPM', 12, vec2(211, 48), vec2(324, 64), ui.Alignment.Start, ui.Alignment.Center, false, rgbm(0.70, 0.73, 0.76, 1))
-  ui.dwriteDrawTextClipped(driving and string.format('%.0f', driving.speed_kmh) or '--', 27, vec2(111, 60), vec2(194, 98), ui.Alignment.Start, ui.Alignment.Center, false, rgbm(1, 1, 1, 1))
-  ui.dwriteDrawTextClipped(driving and tostring(driving.rpm) or '--', 27, vec2(211, 60), vec2(328, 98), ui.Alignment.Start, ui.Alignment.Center, false, rgbm(1, 1, 1, 1))
+  ui.dwriteDrawTextClipped('KMH', 12, vec2(108, 43), vec2(190, 58), ui.Alignment.Start, ui.Alignment.Center, false, rgbm(0.70, 0.73, 0.76, 1))
+  ui.dwriteDrawTextClipped('RPM', 12, vec2(211, 43), vec2(350, 58), ui.Alignment.Start, ui.Alignment.Center, false, rgbm(0.70, 0.73, 0.76, 1))
+  ui.dwriteDrawTextClipped(driving and string.format('%.0f', driving.speed_kmh) or '--', 27, vec2(108, 55), vec2(194, 92), ui.Alignment.Start, ui.Alignment.Center, false, rgbm(1, 1, 1, 1))
+  ui.dwriteDrawTextClipped(driving and tostring(driving.rpm) or '--', 27, vec2(211, 55), vec2(355, 92), ui.Alignment.Start, ui.Alignment.Center, false, rgbm(1, 1, 1, 1))
 
 end
 

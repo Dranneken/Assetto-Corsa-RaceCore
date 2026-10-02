@@ -1,0 +1,63 @@
+function script.fuel(dt)
+  local position = getPositionTable()
+  local vertOffset = app.padding
+
+  local fuelLerp = math.lerp(0, ui.windowWidth(), playerCar().fuel / playerCar().maxFuel)
+  local fuelBarColor = color.uigreen
+
+  ui.setCursor(vec2(0, vertOffset))
+  ui.childWindow('FuelBar', position.fuel.barsize, function()
+    ui.drawRectFilled(vec2(0, 0), vec2(ui.windowWidth(), math.floor(position.fuel.barsize.y)), color.black)
+    ui.drawRectFilled(vec2(0, 0), vec2(fuelLerp, math.floor(position.fuel.barsize.y)), fuelBarColor)
+    vertOffset = vertOffset + position.fuel.barsize.y
+  end)
+
+  if settings.fuelShowRemaining then
+    local fuelMaxLevel = math.round(playerCar().maxFuel, 1)
+    local fuelLevel = math.round(playerCar().fuel, 1)
+    local fuelPerLap = math.round(playerCar().fuelPerLap, 1)
+    local fuelText = 'L'
+    local fuelValue = fuelLevel
+
+    if settings.fuelChangeBarColor then
+      if fuelPerLap > 0 then
+        if fuelLevel <= fuelPerLap * settings.fuelRedBar then
+          fuelBarColor = color.uired
+        elseif fuelLevel <= fuelPerLap * settings.fuelYellowBar then
+          fuelBarColor = color.yellow
+        end
+      else
+        if math.round(fuelLevel / fuelMaxLevel, 2) <= 0.05 then
+          fuelBarColor = color.uired
+        elseif math.round(fuelLevel / fuelMaxLevel, 2) <= 0.20 then
+          fuelBarColor = color.yellow
+        end
+      end
+    end
+
+    if settings.fuelLaps and fuelPerLap > 0 then
+      fuelText = 'Laps'
+      fuelValue = math.round(fuelLevel / fuelPerLap, 1)
+    elseif settings.fuelGallons and not settings.fuelLaps then
+      fuelText = 'gal'
+      fuelValue = math.round(fuelLevel * 0.264172, 1)
+    end
+
+    ui.setCursor(vec2(0, vertOffset))
+    ui.childWindow('FuelValue', vec2(position.fuel.barsize.x, position.fuel.valueheight), function()
+      ui.drawRectFilled(vec2(0, 0), vec2(ui.windowWidth(), position.fuel.valueheight), setColorMult(color.black, 50))
+      ui.pushDWriteFont(app.font.black)
+      ui.dwriteDrawText('FUEL REMAINING', scale(10), position.fuel.txtpos)
+      ui.popDWriteFont()
+
+      ui.setCursor(vec2(position.fuel.txtpos.x, position.fuel.valuepos))
+      ui.pushDWriteFont(app.font.bold)
+      local fuelValueTxt = string.format('%.1f', fuelValue):gsub('%.', ','):gsub('^(%d),', '0%1,')
+      local fuelValueBox = scaleVec2(50, 25)
+      local fuelValueFontSize = fitFontSize(fuelValueTxt, app.font.bold, scale(22), fuelValueBox)
+      ui.dwriteTextAligned(fuelValueTxt, fuelValueFontSize, -1, 0, fuelValueBox, false, color.white)
+      ui.dwriteDrawText(fuelText, scale(16), position.fuel.unitpos)
+      ui.popDWriteFont()
+    end)
+  end
+end

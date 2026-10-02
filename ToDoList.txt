@@ -112,10 +112,11 @@ Short name: RaceCore
 * [x] Damage
 * [x] Car state
 * [x] Track position
-* [x] Build the three-window in-game driver HUD; widgets can be used with or without the RaceCore host
-  * [x] Leaderboard with position, driver name, tyre compound, interval to the car ahead, ping, and best/last lap time
-  * [x] Gearbox display with gear, speed, RPM dial, and shift lights; omit fuel
-  * [x] Steering input circle with a white angle arc, plus throttle and brake traces
+* [x] Build nine individually toggleable local HUD windows based on RennsportHUD 1.29, usable with or without the RaceCore host
+  * [x] Essentials: speed, gear, RPM, and shift lights
+  * [x] Inputs: steering, pedals, force feedback, and electronics
+  * [x] Session info, lap delta, sectors and flags, fuel, tires, and personal timing
+  * [x] Local leaderboard, plus a separate RaceCore host-fed live leaderboard
 
 ### Live Processing
 
