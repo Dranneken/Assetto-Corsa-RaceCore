@@ -14,8 +14,8 @@ If someone else is hosting RaceCore, you only need the in-game client. You do **
 
 1. Download the [complete RaceCore client package](https://github.com/Dranneken/Assetto-Corsa-RaceCore/archive/refs/heads/main.zip), which includes the Lua app, HUD modules, and assets.
 2. Copy the complete contents of `client/csp_lua` into `assettocorsa/apps/lua/AC_RaceCore`.
-3. Enable **RaceCore Client** in the CSP Apps settings. Its nine RaceCore HUD panels appear as separate windows that can be enabled or hidden individually. Then start Assetto Corsa and join the same open lobby from the Kunos server list as the host. Coordinate its server name, track/layout, and car restrictions first.
-4. For the current remote test, if the RaceCore host is on another network, install and connect Tailscale, then accept the host's device-sharing invitation. In the in-game RaceCore Client window, set Host to the Tailscale address and port the host gives you, such as `100.x.y.z:8000`. Tailscale is a temporary private-test requirement; players will not need it once public hosting is implemented.
+3. Enable **RC Client** in the CSP Apps settings. Its eight HUD windows can be enabled or hidden individually, including **RC Session/Leaderboard**, which combines the former Session and Leaderboard windows. Then start Assetto Corsa and join the same open lobby from the Kunos server list as the host. Coordinate its server name, track/layout, and car restrictions first.
+4. For the current remote test, if the RaceCore host is on another network, install and connect Tailscale, then accept the host's device-sharing invitation. In the in-game RC Client window, set Host to the Tailscale address and port the host gives you, such as `100.x.y.z:8000`. Tailscale is a temporary private-test requirement; players will not need it once public hosting is implemented.
 5. Enter the session ID, car ID, and driver ID supplied by the RaceCore host, then connect. The IDs must match your configured session entry.
 
 You need the same Assetto Corsa track, car, and other content required by the multiplayer race. The [remote two-player test plan](docs/remote-two-player-test-plan.md) has the full connection checklist.
@@ -43,17 +43,19 @@ Follow the [remote two-player test plan](docs/remote-two-player-test-plan.md) fo
 - **Race state:** Live car state, race and class order, timing data, pit and driver status, connection health, and audit events.
 - **Telemetry:** CSP WebSocket ingestion, validation, timestamps, in-memory latest state and bounded history, timestamp interpolation for buffered samples, packet-gap and staleness tracking, and connection metrics.
 - **Persistence:** Optional PostgreSQL storage for durable session data, entries, completed laps, results, and audit events. High-frequency telemetry stays in RAM.
-- **CSP client:** In-game configuration UI, telemetry sender, nine individually toggleable local HUD panels based on RennsportHUD 1.29, and a separate RaceCore host-fed live leaderboard.
+- **CSP client:** In-game configuration UI, telemetry sender, and eight individually toggleable local HUD panels based on RennsportHUD 1.29.
 - **Windows host package:** A versioned, user-level app bundle with install, start, stop, log, and upgrade scripts.
 - **Control UI:** React, TypeScript, and Vite scaffold for the future Race Director dashboard.
 
 ## In-game driver HUD
 
-The RaceCore Client app includes nine individually toggleable local HUD windows: **Essentials**, **Inputs**, **Session**, **Delta**, **Sectors & Flags**, **Fuel**, **Tires**, **Personal Timing**, and **Leaderboard**. The existing RaceCore connection/configuration window and a separate **RaceCore Live Leaderboard** for host-fed session data remain in the same app. The nine HUD panels read local Assetto Corsa data.
+The **RC Client** app includes eight individually toggleable local HUD windows: **RC Gearbox/RPM**, **RC Session/Leaderboard**, **RC HUD Inputs**, **RC HUD Delta**, **RC HUD Sectors & Flags**, **RC HUD Fuel**, **RC HUD Tires**, and **RC HUD Personal Timing**. The combined Session/Leaderboard replaces the former separate windows, keeps your row visible while scrolling through the field, and lets you click a row to spectate that driver. The existing connection/configuration window remains in the same app. The HUD panels read local Assetto Corsa data.
+
+Right-click while hovering over any HUD to toggle its persistent position lock; the confirmation reads **LOCKED** in red or **UNLOCKED** in green. HUD windows have no close button; use the CSP app drawer to hide them. The RC Client and RC HUD Settings windows retain their close controls.
 
 RaceCore's HUD design is inspired by CMRT Complete HUD, Real Penalty, and C1XTZ's RennsportHUD 1.29. Licensing and bundled-asset credits are listed in [the client open-source notices](client/csp_lua/OPEN_SOURCE_LICENSES.md).
 
-Install the complete contents of `client/csp_lua` into `assettocorsa/apps/lua/AC_RaceCore`, enable **RaceCore Client** in CSP, then restart or reload the app after updating its files. Upstream attribution, GPL-3.0 license, and asset credits are in [the client open-source notices](client/csp_lua/OPEN_SOURCE_LICENSES.md) and [source credits](client/racecorehud/README.md).
+Install the complete contents of `client/csp_lua` into `assettocorsa/apps/lua/AC_RaceCore`, enable **RC Client** in CSP, then restart or reload the app after updating its files. Upstream attribution, GPL-3.0 license, and asset credits are in [the client open-source notices](client/csp_lua/OPEN_SOURCE_LICENSES.md) and [source credits](client/racecorehud/README.md).
 
 ## Requirements
 
@@ -150,7 +152,7 @@ This is the current high-level roadmap. The detailed task checklist is in [`TODO
 - Race session creation and configuration snapshots, lifecycle state machine, reset/restart operations, and audit log.
 - Authoritative live car state and overall/class race order, including available timing, pit, driver, connection, retirement, and damage fields.
 - CSP telemetry sender and host ingestion with packet validation, timestamps, bounded in-memory history, stale and dropped-packet tracking, and connection health metrics.
-- Three individually toggleable, host-independent CSP driver HUDs for the leaderboard, gearbox, and steering/pedals.
+- Eight individually toggleable, host-independent CSP driver HUDs, including the consolidated Session/Leaderboard.
 - Local PostgreSQL setup and lifecycle scripts, plus a versioned, independently installable Windows host package.
 
 ### In progress

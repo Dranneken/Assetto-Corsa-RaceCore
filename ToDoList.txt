@@ -112,11 +112,11 @@ Short name: RaceCore
 * [x] Damage
 * [x] Car state
 * [x] Track position
-* [x] Build nine individually toggleable local HUD windows based on RennsportHUD 1.29, usable with or without the RaceCore host
+* [x] Build eight individually toggleable local HUD windows based on RennsportHUD 1.29, usable with or without the RaceCore host; combine Session and Leaderboard in RC Session/Leaderboard
   * [x] Essentials: speed, gear, RPM, and shift lights
   * [x] Inputs: steering, pedals, force feedback, and electronics
   * [x] Session info, lap delta, sectors and flags, fuel, tires, and personal timing
-  * [x] Local leaderboard, plus a separate RaceCore host-fed live leaderboard
+  * [x] Local leaderboard with scrolling, player-row tracking, status plates, and click-to-spectate
 
 ### Live Processing
 
